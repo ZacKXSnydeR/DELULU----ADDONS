@@ -1,0 +1,17 @@
+target/
+node_modules/
+
+# Local/dev helper scripts
+*.bat
+*.ps1
+test_*.js
+fetch_vidlink*.js
+!scripts/*.ps1
+
+# Local backups and random docs
+*.bak
+*.bak-*
+*.pdf
+
+# Bundled runtime binary should not be tracked here
+bypass/node.exe

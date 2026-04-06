@@ -1,0 +1,8 @@
+[
+  {
+    "id": "embegator",
+    "name": "EmbeGator",
+    "manifestUrl": "https://raw.githubusercontent.com/REPO_OWNER/REPO_NAME/main/addon.manifest.json",
+    "description": "Official EmbeGator addon for Delulu"
+  }
+]
