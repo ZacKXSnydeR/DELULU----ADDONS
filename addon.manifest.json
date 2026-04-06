@@ -1,21 +1,21 @@
-{
+﻿{
     "id":  "embegator",
     "name":  "EmbeGator",
     "version":  "1.0.0",
     "protocolVersion":  "1.0",
     "publisher":  "zackxsnyder",
     "publicKeyId":  "delulu-official-v1",
-    "signature":  "BASE64_SIGNATURE_HERE",
+    "signature":  "REPLACE_WITH_BASE64_SIGNATURE",
     "platformAssets":  {
                            "windows-x64":  {
                                                "downloadUrl":  "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.0/embegator-windows-x64.exe",
-                                               "sha256":  "SHA256_HEX_X64",
+                                               "sha256":  "9855ed29ccc1e75d1019b7aeaf247910c725a03baa02d508f35e4aa34ccbdaa0",
                                                "binaryName":  "embegator.exe",
                                                "entryCommand":  "rpc"
                                            },
                            "windows-x86":  {
                                                "downloadUrl":  "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.0/embegator-windows-x86.exe",
-                                               "sha256":  "SHA256_HEX_X86",
+                                               "sha256":  "9578b9e9d8e135416ba95ebc40bd85cf1863a0cff8d7bc6d4f3df7d7bcbb8d5e",
                                                "binaryName":  "embegator.exe",
                                                "entryCommand":  "rpc"
                                            }
