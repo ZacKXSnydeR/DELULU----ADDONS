@@ -130,44 +130,11 @@ impl Output {
             }
 
             if let Some(playlist) = st.playlist {
-                let mut referer = None;
-                let mut origin = None;
-
-                if let Some((_, query)) = playlist.split_once('?') {
-                    for pair in query.split('&') {
-                        if let Some((k, v)) = pair.split_once('=') {
-                            match k {
-                                "referer" => referer = Some(v.to_string()),
-                                "origin" => origin = Some(v.to_string()),
-                                "s" | "headers" => {
-                                    if let Ok(decoded) = urlencoding::decode(v) {
-                                        if let Ok(json) =
-                                            serde_json::from_str::<serde_json::Value>(&decoded)
-                                        {
-                                            if let Some(r) =
-                                                json.get("referer").and_then(|val| val.as_str())
-                                            {
-                                                referer = Some(r.to_string());
-                                            }
-                                            if let Some(o) =
-                                                json.get("origin").and_then(|val| val.as_str())
-                                            {
-                                                origin = Some(o.to_string());
-                                            }
-                                        }
-                                    }
-                                }
-                                _ => {}
-                            }
-                        }
-                    }
-                }
-
-                let headers = if referer.is_some() || origin.is_some() {
-                    Some(StreamHeaders { referer, origin })
-                } else {
-                    None
-                };
+                // Delulu contract: always use vidlink.pro header profile for playback.
+                let headers = Some(StreamHeaders {
+                    referer: Some("https://vidlink.pro/".to_string()),
+                    origin: Some("https://vidlink.pro".to_string()),
+                });
 
                 vec![Stream {
                     url: Some(clean_stream_url(&playlist)),
