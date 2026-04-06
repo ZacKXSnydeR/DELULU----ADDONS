@@ -3,7 +3,10 @@ mod network;
 
 use clap::{Parser, Subcommand};
 use models::{MediaQuery, MediaType};
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use std::error::Error;
+use tokio::io::{AsyncBufReadExt, BufReader};
 
 #[derive(Parser, Debug)]
 #[command(name = "EmbeGator")]
@@ -14,71 +17,223 @@ struct Cli {
     #[command(subcommand)]
     command: Commands,
 
-    /// Output raw JSON instead of styled text
     #[arg(short = 'j', long = "json", global = true)]
     json: bool,
 
-    /// Absolute path to the bypass.js script
     #[arg(long = "bypass-path", global = true)]
     bypass_path: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    /// Extract a movie stream and subtitles
     Movie {
-        /// The TMDB ID of the movie
         #[arg(short, long)]
         id: String,
     },
-    /// Extract a TV show stream and subtitles
     Tv {
-        /// The TMDB ID of the TV show
         #[arg(short, long)]
         id: String,
-
-        /// Season number
         #[arg(short, long)]
         season: u32,
-
-        /// Episode number
         #[arg(short, long)]
         episode: u32,
     },
-    /// Extract an Anime stream and subtitles
     Anime {
-        /// The TMDB ID of the Anime
         #[arg(short, long)]
         id: String,
-
-        /// Season number
         #[arg(short, long)]
         season: u32,
-
-        /// Episode number
         #[arg(short, long)]
         episode: u32,
     },
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RpcRequest {
+    id: Value,
+    method: String,
+    params: Option<Value>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ResolveParams {
+    media_type: String,
+    tmdb_id: u32,
+    season: Option<u32>,
+    episode: Option<u32>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct RpcResponse {
+    id: Value,
+    jsonrpc: String,
+    protocol_version: String,
+    result: Value,
+}
+
+fn to_media_query(params: ResolveParams, bypass_path: Option<String>) -> Result<MediaQuery, String> {
+    let media_type = match params.media_type.to_lowercase().as_str() {
+        "movie" => MediaType::Movie,
+        "tv" => MediaType::TvShow,
+        "anime" => MediaType::Anime,
+        other => return Err(format!("Unsupported mediaType: {other}")),
+    };
+    if media_type != MediaType::Movie && (params.season.is_none() || params.episode.is_none()) {
+        return Err("Season and episode are required for tv/anime".to_string());
+    }
+    Ok(MediaQuery {
+        tmdb_id: params.tmdb_id.to_string(),
+        media_type,
+        season: params.season,
+        episode: params.episode,
+        bypass_path,
+    })
+}
+
+async fn run_rpc_mode() -> Result<(), Box<dyn Error>> {
+    let mut lines = BufReader::new(tokio::io::stdin()).lines();
+    let maybe_line = lines.next_line().await?;
+    let Some(line) = maybe_line else {
+        return Ok(());
+    };
+    let req: RpcRequest = match serde_json::from_str(&line) {
+        Ok(v) => v,
+        Err(e) => {
+            let out = json!({
+                "id": null,
+                "jsonrpc": "2.0",
+                "protocolVersion": "1.0",
+                "result": {
+                    "success": false,
+                    "errorCode": "BAD_RESPONSE",
+                    "errorMessage": format!("Invalid RPC request: {e}")
+                }
+            });
+            println!("{}", serde_json::to_string(&out)?);
+            return Ok(());
+        }
+    };
+
+    let bypass_path = std::env::var("EMBEGATOR_BYPASS_PATH").ok();
+    let result = match req.method.as_str() {
+        "initialize" => json!({
+            "ok": true,
+            "name": "EmbeGator",
+            "version": env!("CARGO_PKG_VERSION"),
+            "protocolVersion": "1.0",
+            "capabilities": ["stream.resolve", "subtitle.list", "health.check"]
+        }),
+        "healthCheck" => json!({
+            "ok": true,
+            "version": env!("CARGO_PKG_VERSION")
+        }),
+        "resolveStream" => {
+            let parsed_opt: Option<ResolveParams> =
+                req.params.clone().and_then(|v| serde_json::from_value(v).ok());
+            if parsed_opt.is_none() {
+                json!({
+                    "success": false,
+                    "errorCode": "BAD_RESPONSE",
+                    "errorMessage": "Missing or invalid resolve params"
+                })
+            } else {
+                let parsed = parsed_opt.expect("checked above");
+                if parsed.tmdb_id == 0 {
+                    json!({
+                        "success": false,
+                        "errorCode": "BAD_RESPONSE",
+                        "errorMessage": "tmdbId is required"
+                    })
+                } else {
+                    match to_media_query(parsed, bypass_path) {
+                        Ok(query) => match crate::network::fetch_media(query).await {
+                            Ok(output) => {
+                                let first_stream = output.streams.first();
+                                let stream_url = first_stream.and_then(|s| s.url.clone());
+                                let headers = first_stream
+                                    .and_then(|s| s.headers.clone())
+                                    .map(|h| {
+                                        json!({
+                                            "Referer": h.referer,
+                                            "Origin": h.origin
+                                        })
+                                    })
+                                    .unwrap_or_else(|| {
+                                        json!({
+                                            "Referer": "https://vidlink.pro/",
+                                            "Origin": "https://vidlink.pro"
+                                        })
+                                    });
+
+                                let subtitles = output
+                                    .subtitles
+                                    .iter()
+                                    .filter_map(|s| {
+                                        let url = s.url.clone()?;
+                                        Some(json!({
+                                            "url": url,
+                                            "language": s.language.clone().unwrap_or_else(|| "Unknown".to_string())
+                                        }))
+                                    })
+                                    .collect::<Vec<_>>();
+
+                                if stream_url.is_some() {
+                                    json!({
+                                        "success": true,
+                                        "streamUrl": stream_url,
+                                        "headers": headers,
+                                        "subtitles": subtitles
+                                    })
+                                } else {
+                                    json!({
+                                        "success": false,
+                                        "errorCode": "NO_STREAM",
+                                        "errorMessage": "No playable stream returned by provider"
+                                    })
+                                }
+                            }
+                            Err(e) => json!({
+                                "success": false,
+                                "errorCode": "UPSTREAM_ERROR",
+                                "errorMessage": e.to_string()
+                            }),
+                        },
+                        Err(err) => json!({
+                            "success": false,
+                            "errorCode": "BAD_RESPONSE",
+                            "errorMessage": err
+                        }),
+                    }
+                }
+            }
+        }
+        _ => json!({
+            "success": false,
+            "errorCode": "BAD_RESPONSE",
+            "errorMessage": format!("Unknown method: {}", req.method)
+        }),
+    };
+
+    let out = RpcResponse {
+        id: req.id,
+        jsonrpc: "2.0".to_string(),
+        protocol_version: "1.0".to_string(),
+        result,
+    };
+    println!("{}", serde_json::to_string(&out)?);
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let cli = Cli::parse();
-
-    if !cli.json {
-        // Print the ASCII Banner
-        println!("\x1b[1;36m");
-        println!("  _____           _         ______");
-        println!(" / ____|         | |       |  ____|");
-        println!("| |  __  ___   __| |___    | |__  _   _  ___ ");
-        println!("| | |_ |/ _ \\ / _` / __|   |  __|| | | |/ _ \\");
-        println!("| |__| | (_) | (_| \\__ \\   | |___| |_| |  __/");
-        println!(" \\_____|\\___/ \\__,_|___/   |______\\__, |\\___|");
-        println!("                                   __/ |");
-        println!("                                  |___/ \x1b[0m\n");
-        println!("\x1b[1;35m  :: Vidlink Direct Extractor ::\x1b[0m\n");
+    if std::env::args().nth(1).as_deref() == Some("rpc") {
+        return run_rpc_mode().await;
     }
 
+    let cli = Cli::parse();
     let query = match cli.command {
         Commands::Movie { id } => MediaQuery {
             tmdb_id: id,
@@ -87,22 +242,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
             episode: None,
             bypass_path: cli.bypass_path.clone(),
         },
-        Commands::Tv {
-            id,
-            season,
-            episode,
-        } => MediaQuery {
+        Commands::Tv { id, season, episode } => MediaQuery {
             tmdb_id: id,
             media_type: MediaType::TvShow,
             season: Some(season),
             episode: Some(episode),
             bypass_path: cli.bypass_path.clone(),
         },
-        Commands::Anime {
-            id,
-            season,
-            episode,
-        } => MediaQuery {
+        Commands::Anime { id, season, episode } => MediaQuery {
             tmdb_id: id,
             media_type: MediaType::Anime,
             season: Some(season),
@@ -111,81 +258,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
         },
     };
 
-    if !cli.json {
-        println!(
-            "\x1b[1;33m[*] Fetching {} stream for ID: {}...\x1b[0m",
-            query.media_type, query.tmdb_id
-        );
-    }
     match crate::network::fetch_media(query).await {
         Ok(result) => {
             if cli.json {
-                if let Ok(pretty) = serde_json::to_string_pretty(&result) {
-                    println!("{}", pretty);
-                } else {
-                    eprintln!(r#"{{"error": "Failed to serialize JSON"}}"#);
-                }
+                println!("{}", serde_json::to_string_pretty(&result)?);
             } else {
-                println!("\x1b[1;32m[+] Success!\x1b[0m");
-
-                println!("\n\x1b[1;36m=== 🎥 STREAM LINKS ===\x1b[0m");
-                if result.streams.is_empty() {
-                    println!("  No stream links found.");
-                } else {
-                    for (i, stream) in result.streams.iter().enumerate() {
-                        let qual = stream.quality.as_deref().unwrap_or("Unknown");
-                        println!("\x1b[1;37m[{}] Quality: {}\x1b[0m", i + 1, qual);
-                        println!(
-                            "    Link: \x1b[4m{}\x1b[0m",
-                            stream.url.as_deref().unwrap_or("N/A")
-                        );
-                    }
-                }
-
-                println!("\n\x1b[1;36m=== 📝 SUBTITLE LINKS ===\x1b[0m");
-                if result.subtitles.is_empty() {
-                    println!("  No subtitles found.");
-                } else {
-                    for (i, sub) in result.subtitles.iter().enumerate() {
-                        let lang = sub.language.as_deref().unwrap_or("Unknown");
-                        println!("\x1b[1;37m[{}] Language: {}\x1b[0m", i + 1, lang);
-                        println!(
-                            "    Link: \x1b[4m{}\x1b[0m",
-                            sub.url.as_deref().unwrap_or("N/A")
-                        );
-                    }
-                }
-
-                println!("\n\x1b[1;36m=== 🔒 HEADERS ===\x1b[0m");
-                if let Some(stream) = result.streams.first() {
-                    if let Some(headers) = &stream.headers {
-                        println!(
-                            "  Referer: {}",
-                            headers.referer.as_deref().unwrap_or("https://vidlink.pro/")
-                        );
-                        println!(
-                            "  Origin: {}",
-                            headers.origin.as_deref().unwrap_or("https://vidlink.pro")
-                        );
-                    } else {
-                        println!("  Referer: https://vidlink.pro/");
-                        println!("  Origin: https://vidlink.pro");
-                    }
-                } else {
-                    println!("  Referer: https://vidlink.pro/");
-                    println!("  Origin: https://vidlink.pro");
-                }
-                println!("  User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36\n");
+                println!("{}", serde_json::to_string_pretty(&result)?);
             }
         }
         Err(e) => {
             if cli.json {
-                eprintln!(r#"{{"error": "{}"}}"#, e);
+                eprintln!(r#"{{"error":"{}"}}"#, e);
             } else {
-                eprintln!("\n\x1b[1;31m[-] Error Extracing: {}\x1b[0m", e);
+                eprintln!("Error: {}", e);
             }
         }
     }
-
     Ok(())
 }
