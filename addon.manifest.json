@@ -1,21 +1,21 @@
 ﻿{
     "id":  "embegator",
     "name":  "EmbeGator",
-    "version":  "1.0.0",
+    "version":  "1.0.1",
     "protocolVersion":  "1.0",
     "publisher":  "zackxsnyder",
     "publicKeyId":  "delulu-official-v1",
     "signature":  "REPLACE_WITH_BASE64_SIGNATURE",
     "platformAssets":  {
                            "windows-x64":  {
-                                               "downloadUrl":  "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.0/embegator-windows-x64.exe",
-                                               "sha256":  "9855ed29ccc1e75d1019b7aeaf247910c725a03baa02d508f35e4aa34ccbdaa0",
+                                               "downloadUrl":  "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.1/embegator-windows-x64.exe",
+                                               "sha256":  "9b0195d2b496e4110b415d2626558a1a3be61f4c0df70c2f449541658179caba",
                                                "binaryName":  "embegator.exe",
                                                "entryCommand":  "rpc"
                                            },
                            "windows-x86":  {
-                                               "downloadUrl":  "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.0/embegator-windows-x86.exe",
-                                               "sha256":  "9578b9e9d8e135416ba95ebc40bd85cf1863a0cff8d7bc6d4f3df7d7bcbb8d5e",
+                                               "downloadUrl":  "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.1/embegator-windows-x86.exe",
+                                               "sha256":  "fd71ac192958950faf26e60f1d0b871d5e736e0374c05cb4aeb89515883bbcb6",
                                                "binaryName":  "embegator.exe",
                                                "entryCommand":  "rpc"
                                            }
@@ -31,6 +31,6 @@
                            "userAgent":  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
                        },
     "minAppVersion":  "1.0.0",
-    "releaseNotesUrl":  "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/v1.0.0",
+    "releaseNotesUrl":  "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/v1.0.1",
     "homepageUrl":  "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
 }
