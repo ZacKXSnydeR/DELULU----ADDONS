@@ -15,3 +15,7 @@ fetch_vidlink*.js
 
 # Bundled runtime binary should not be tracked here
 bypass/node.exe
+
+release-artifacts/
+godfather_result.json
+

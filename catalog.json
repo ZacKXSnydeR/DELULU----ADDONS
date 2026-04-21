@@ -2,13 +2,13 @@
   {
     "id": "embegator",
     "name": "EmbeGator",
-    "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/addon.manifest.json",
+    "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/embegator/manifest.json",
     "description": "Official EmbeGator addon for Delulu"
   },
   {
     "id": "motherbox",
     "name": "MotherBox",
-    "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/motherbox.manifest.json",
+    "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/motherbox/manifest.json",
     "description": "MovieBox stream resolver with embedded proxy — multi-audio, multi-quality, self-proxying"
   }
 ]
