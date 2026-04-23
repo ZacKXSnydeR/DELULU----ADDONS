@@ -1,36 +1,36 @@
-﻿{
-    "id":  "embegator",
-    "name":  "EmbeGator",
-    "version":  "1.0.1",
-    "protocolVersion":  "1.0",
-    "publisher":  "zackxsnyder",
-    "publicKeyId":  "delulu-official-v1",
-    "signature":  "REPLACE_WITH_BASE64_SIGNATURE",
-    "platformAssets":  {
-                           "windows-x64":  {
-                                               "downloadUrl":  "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.1/embegator-windows-x64.exe",
-                                               "sha256":  "9b0195d2b496e4110b415d2626558a1a3be61f4c0df70c2f449541658179caba",
-                                               "binaryName":  "embegator.exe",
-                                               "entryCommand":  "rpc"
-                                           },
-                           "windows-x86":  {
-                                               "downloadUrl":  "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.1/embegator-windows-x86.exe",
-                                               "sha256":  "fd71ac192958950faf26e60f1d0b871d5e736e0374c05cb4aeb89515883bbcb6",
-                                               "binaryName":  "embegator.exe",
-                                               "entryCommand":  "rpc"
-                                           }
-                       },
-    "capabilities":  [
-                         "stream.resolve",
-                         "subtitle.list",
-                         "health.check"
-                     ],
-    "headerDefaults":  {
-                           "defaultOrigin":  "https://vidlink.pro",
-                           "defaultReferer":  "https://vidlink.pro/",
-                           "userAgent":  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-                       },
-    "minAppVersion":  "1.0.0",
-    "releaseNotesUrl":  "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/v1.0.1",
-    "homepageUrl":  "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
+{
+  "id": "embegator",
+  "name": "EmbeGator",
+  "version": "1.0.1",
+  "protocolVersion": "1.0",
+  "publisher": "zackxsnyder",
+  "publicKeyId": "delulu-official-v1",
+  "signature": "C0rj3/7a4v23jofzwCzMDbL7Mfy7gSMCOmsJsmXIxekm+JGkVPGGhvSuY651XPWxscOCS8TGqY5evkwqmTZ3Bw==",
+  "platformAssets": {
+    "windows-x64": {
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.1/embegator-windows-x64.exe",
+      "sha256": "9b0195d2b496e4110b415d2626558a1a3be61f4c0df70c2f449541658179caba",
+      "binaryName": "embegator.exe",
+      "entryCommand": "rpc"
+    },
+    "windows-x86": {
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.1/embegator-windows-x86.exe",
+      "sha256": "fd71ac192958950faf26e60f1d0b871d5e736e0374c05cb4aeb89515883bbcb6",
+      "binaryName": "embegator.exe",
+      "entryCommand": "rpc"
+    }
+  },
+  "capabilities": [
+    "stream.resolve",
+    "subtitle.list",
+    "health.check"
+  ],
+  "headerDefaults": {
+    "defaultOrigin": "https://vidlink.pro",
+    "defaultReferer": "https://vidlink.pro/",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+  },
+  "minAppVersion": "1.0.0",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/v1.0.1",
+  "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
 }
