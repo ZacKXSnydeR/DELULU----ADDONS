@@ -1,6 +1,6 @@
 [package]
 name = "motherbox"
-version = "3.0.2"
+version = "3.0.3"
 edition = "2021"
 description = "Unified MovieBox stream resolver + embedded CDN reverse proxy"
 

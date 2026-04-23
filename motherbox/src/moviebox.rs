@@ -1,5 +1,5 @@
 //! MovieBox provider — pure HTTP resolver.
-//! Uses shared http.rs client, Jaro-Winkler search scoring,
+//! Uses shared http.rs client, Jaro-Winkler search scoring with strict Duration Guard,
 //! improved TV season/episode mapping (Anime support), and 401 auto-retry.
 
 use crate::auth::{self, Auth, MOVIEBOX_HOST, PLAYER_HOST, UA_MOBILE};
@@ -39,6 +39,9 @@ pub async fn search_detail_path(
     if tmdb.original_title != tmdb.title {
         variations.push(tmdb.original_title.clone());
     }
+    
+    // Add "Hindi" variation for regional availability
+    variations.push(format!("{} Hindi", tmdb.title));
 
     let title_l = tmdb.title.to_lowercase();
     let tmdb_dur = tmdb.runtime.unwrap_or(0) * 60;
@@ -104,68 +107,76 @@ pub async fn search_detail_path(
                 continue;
             }
 
-            let mut scored_results: Vec<(f64, &Value)> = results
-                .iter()
-                .enumerate()
-                .map(|(index, item)| {
-                    let t = item["title"].as_str().unwrap_or("").to_lowercase();
-                    let st = item["subjectType"].as_u64().unwrap_or(1);
-                    let mb_dur = item["duration"].as_u64().unwrap_or(0);
-                    let rd = item["releaseDate"].as_str().unwrap_or("");
-                    let mb_year = if rd.len() >= 4 { &rd[0..4] } else { "" };
+            let mut scored_results: Vec<(f64, &Value)> = Vec::new();
+            
+            for (index, item) in results.iter().enumerate() {
+                let t = item["title"].as_str().unwrap_or("").to_lowercase();
+                let st = item["subjectType"].as_u64().unwrap_or(1);
+                let mb_dur = item["duration"].as_u64().unwrap_or(0);
+                let rd = item["releaseDate"].as_str().unwrap_or("");
+                let mb_year = if rd.len() >= 4 { &rd[0..4] } else { "" };
 
-                    let mut score: f64 = 0.0;
+                // --- HARD FILTERS ---
+                
+                // 1. Music/Trailer Filter
+                if st == 6 { continue; }
 
-                    // 1. Jaro-Winkler Title Matching (0.0 to 1.0 -> max 2000)
-                    let similarity = jaro_winkler(&title_l, &t);
-                    score += similarity * 2000.0;
+                // 2. Strict Duration Guard (for Movies)
+                if tmdb.media_type == "movie" && tmdb_dur > 0 {
+                    if mb_dur == 0 { continue; } // Skip zero-duration placeholders
+                    let diff = (tmdb_dur as i32 - mb_dur as i32).abs();
+                    if diff > 600 { continue; } // HARD SKIP: Anything off by more than 10 mins
+                }
 
-                    // 2. Content type match preference
-                    if st == expected_st as u64 {
-                        score += 500.0;
-                    } else if st == 6 {
-                        score -= 2000.0; // Music penalty
-                    }
+                // --- SCORING ---
 
-                    // 3. API order bonus
-                    score += 100.0 - (index as f64).min(50.0);
+                let mut score: f64 = 0.0;
 
-                    // 4. Release year verification
-                    if let Some(y) = tmdb.year {
-                        let y_str = y.to_string();
-                        if mb_year == y_str {
-                            score += 800.0;
-                        } else if !mb_year.is_empty() {
-                            if let Ok(m_year) = mb_year.parse::<i32>() {
-                                if (m_year - y).abs() <= 1 {
-                                    score += 300.0;
-                                }
+                // 1. Jaro-Winkler Title Matching (0.0 to 1.0 -> max 2000)
+                let similarity = jaro_winkler(&title_l, &t);
+                score += similarity * 2000.0;
+
+                // 2. Content type match preference
+                if st == expected_st as u64 {
+                    score += 500.0;
+                }
+
+                // 3. API order bonus
+                score += 100.0 - (index as f64).min(50.0);
+
+                // 4. Release year verification
+                if let Some(y) = tmdb.year {
+                    let y_str = y.to_string();
+                    if mb_year == y_str {
+                        score += 800.0;
+                    } else if !mb_year.is_empty() {
+                        if let Ok(m_year) = mb_year.parse::<i32>() {
+                            if (m_year - y).abs() <= 1 {
+                                score += 300.0;
                             }
                         }
                     }
+                }
 
-                    // 5. Duration fingerprinting (±2min exact, ±10min partial)
-                    if tmdb.media_type == "movie" && tmdb_dur > 0 && mb_dur > 0 {
-                        let diff = (tmdb_dur as i32 - mb_dur as i32).abs();
-                        if diff <= 120 {
-                            score += 1000.0;
-                        } else if diff <= 600 {
-                            score += 300.0;
-                        }
+                // 5. High-precision Duration Match Bonus
+                if tmdb.media_type == "movie" && tmdb_dur > 0 {
+                    let diff = (tmdb_dur as i32 - mb_dur as i32).abs();
+                    if diff <= 120 {
+                        score += 1000.0;
                     }
+                }
 
-                    (score, item)
-                })
-                .collect();
+                scored_results.push((score, item));
+            }
 
             scored_results.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
 
-            // Log top match
             if let Some((score, best)) = scored_results.first() {
                 eprintln!(
-                    "[moviebox]   Top match: \"{}\" score={:.2} id={}",
+                    "[moviebox]   Top match: \"{}\" score={:.2} dur={} id={}",
                     best["title"].as_str().unwrap_or("?"),
                     score,
+                    best["duration"].as_u64().unwrap_or(0),
                     best["subjectId"].as_str().unwrap_or("?")
                 );
 
@@ -179,7 +190,7 @@ pub async fn search_detail_path(
         }
     }
 
-    Err("No matching content found on MovieBox".into())
+    Err("No content found matching title, type, and strict duration requirements".into())
 }
 
 /// Map TMDB season/episode to MovieBox's internal 1-indexed `se`/`ep`.
