@@ -10,5 +10,11 @@
     "name": "MotherBox",
     "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/motherbox/manifest.json",
     "description": "MovieBox stream resolver with embedded proxy — multi-audio, multi-quality, self-proxying"
+  },
+  {
+    "id": "meta-resolver",
+    "name": "MetaResolver",
+    "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/meta-resolver/manifest.json",
+    "description": "Premium metadata and trailer utility — high-speed ID mapping and direct-play trailer resolver"
   }
 ]

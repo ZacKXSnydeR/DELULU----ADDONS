@@ -1,0 +1,25 @@
+{
+  "id": "meta-resolver",
+  "name": "MetaResolver",
+  "version": "1.0.0",
+  "protocolVersion": "1.0",
+  "publisher": "tenz",
+  "publicKeyId": "delulu-official-v1",
+  "signature": "5nR9qax+mZI4fNLriYKYH/nvYcyVYOrI4NRT7mU6ppLS0bZ0x2cSEzR67tSEJoBZTCmIQBLIs+PJ0K5Vs7egBQ==",
+  "platformAssets": {
+    "windows-x64": {
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/meta-resolver-v1.0.0/meta-resolver-windows-x64.exe",
+      "sha256": "23af771eb049e6e792bb12b2b545f4c00df83c0db95b22af6224bc76520a08e1",
+      "binaryName": "meta-resolver.exe",
+      "entryCommand": "rpc"
+    }
+  },
+  "capabilities": [
+    "resolveStream",
+    "healthCheck"
+  ],
+  "headerDefaults": null,
+  "minAppVersion": "1.0.0",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS",
+  "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
+}
