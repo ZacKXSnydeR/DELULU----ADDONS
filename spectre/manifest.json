@@ -1,15 +1,15 @@
 {
   "id": "spectre",
   "name": "Spectre",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "protocolVersion": "1.0",
   "publisher": "tenz",
   "publicKeyId": "delulu-official-v1",
-  "signature": "kQRrikdl6ban+rqZ++5jWNPHyucmNVTDuppTu5NtuV/r+yhPrtJVG9IV2ETHJSqT5F0vr4kzGgfAPjHvAm3YDQ==",
+  "signature": "Y74xWnMe+xzoLzm0DYw7dU03vbUq0svHtCYIZBYMUWhJlLGIXtWY2lshJzLs2aEjg4sqT0BbUExVxU+uO78lBA==",
   "platformAssets": {
     "windows-x64": {
-      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.0/spectre-windows-x64.exe",
-      "sha256": "876efb9c2a0d69a016aee976b1e224aadf0ed28e92744e37d44946b2e0407f94",
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.1/spectre-windows-x64.exe",
+      "sha256": "232f969133e9728604246970f40f2984687e8cff65d94a76e2f705bce6797548",
       "binaryName": "spectre.exe",
       "entryCommand": "rpc"
     }

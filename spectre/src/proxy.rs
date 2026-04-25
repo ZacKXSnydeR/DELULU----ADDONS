@@ -8,6 +8,7 @@ use tokio::sync::RwLock;
 use lru::LruCache;
 use std::num::NonZeroUsize;
 use std::collections::HashSet;
+use warp::http::{HeaderMap as HttpHeaderMap, HeaderValue as HttpHeaderValue, Response, StatusCode};
 
 #[derive(Clone)]
 struct CachedSegment {
@@ -166,6 +167,38 @@ impl Proxy {
     }
 }
 
+fn set_cors_headers(headers: &mut HttpHeaderMap) {
+    headers.insert("access-control-allow-origin", HttpHeaderValue::from_static("*"));
+    headers.insert("access-control-allow-methods", HttpHeaderValue::from_static("GET,HEAD,OPTIONS"));
+    headers.insert("access-control-allow-headers", HttpHeaderValue::from_static("Content-Type,Range,Origin,Accept,Referer,User-Agent"));
+    headers.insert("access-control-expose-headers", HttpHeaderValue::from_static("Content-Length,Content-Range,Accept-Ranges,Content-Type"));
+    headers.insert("access-control-max-age", HttpHeaderValue::from_static("86400"));
+}
+
+fn build_text_response(status: StatusCode, body: String, content_type: &'static str) -> Response<Vec<u8>> {
+    let mut response = Response::new(body.into_bytes());
+    *response.status_mut() = status;
+    let headers = response.headers_mut();
+    headers.insert("content-type", HttpHeaderValue::from_static(content_type));
+    headers.insert("cache-control", HttpHeaderValue::from_static("no-cache"));
+    set_cors_headers(headers);
+    response
+}
+
+fn build_binary_response(status: StatusCode, body: Vec<u8>, content_type: &str) -> Response<Vec<u8>> {
+    let mut response = Response::new(body);
+    *response.status_mut() = status;
+    let headers = response.headers_mut();
+    if let Ok(value) = HttpHeaderValue::from_str(content_type) {
+        headers.insert("content-type", value);
+    } else {
+        headers.insert("content-type", HttpHeaderValue::from_static("application/octet-stream"));
+    }
+    headers.insert("accept-ranges", HttpHeaderValue::from_static("bytes"));
+    set_cors_headers(headers);
+    response
+}
+
 pub async fn run_proxy(port: u16) {
     let proxy = Arc::new(Proxy::new());
     let proxy_filter = warp::any().map(move || Arc::clone(&proxy));
@@ -177,12 +210,26 @@ pub async fn run_proxy(port: u16) {
         .and_then(move |token, proxy: Arc<Proxy>, host: Option<String>| async move {
             let url = match general_purpose::URL_SAFE_NO_PAD.decode(token) {
                 Ok(u) => String::from_utf8_lossy(&u).to_string(),
-                Err(_) => return Err(warp::reject::not_found()),
+                Err(_) => {
+                    let response = build_text_response(
+                        StatusCode::BAD_REQUEST,
+                        "invalid token".to_string(),
+                        "text/plain; charset=utf-8",
+                    );
+                    return Ok::<_, warp::Rejection>(response);
+                }
             };
             
             let (body_bytes, _ct) = match proxy.fetch_origin(&url, false).await {
                 Ok(r) => r,
-                Err(_) => return Err(warp::reject::not_found()),
+                Err(_) => {
+                    let response = build_text_response(
+                        StatusCode::BAD_GATEWAY,
+                        "upstream fetch failed".to_string(),
+                        "text/plain; charset=utf-8",
+                    );
+                    return Ok::<_, warp::Rejection>(response);
+                }
             };
 
             let body_str = String::from_utf8_lossy(&body_bytes);
@@ -194,9 +241,9 @@ pub async fn run_proxy(port: u16) {
             let mut registry = proxy.segment_registry.write().await;
             *registry = segments;
 
-            Ok::<_, warp::Rejection>(warp::reply::with_header(
+            Ok::<_, warp::Rejection>(build_text_response(
+                StatusCode::OK,
                 rewritten,
-                "Content-Type",
                 "application/vnd.apple.mpegurl",
             ))
         });
@@ -207,7 +254,14 @@ pub async fn run_proxy(port: u16) {
         .and_then(|token, proxy: Arc<Proxy>| async move {
             let url = match general_purpose::URL_SAFE_NO_PAD.decode(token) {
                 Ok(u) => String::from_utf8_lossy(&u).to_string(),
-                Err(_) => return Err(warp::reject::not_found()),
+                Err(_) => {
+                    let response = build_text_response(
+                        StatusCode::BAD_REQUEST,
+                        "invalid token".to_string(),
+                        "text/plain; charset=utf-8",
+                    );
+                    return Ok::<_, warp::Rejection>(response);
+                }
             };
 
             // 1. Check Cache
@@ -221,10 +275,10 @@ pub async fn run_proxy(port: u16) {
                     let u = url.clone();
                     tokio::spawn(async move { p.trigger_prefetch(&u).await; });
 
-                    return Ok::<_, warp::Rejection>(warp::reply::with_header(
-                        warp::reply::Response::new(body.into()),
-                        "Content-Type",
-                        ct,
+                    return Ok::<_, warp::Rejection>(build_binary_response(
+                        StatusCode::OK,
+                        body,
+                        &ct,
                     ));
                 }
             }
@@ -232,7 +286,14 @@ pub async fn run_proxy(port: u16) {
             // 2. Cache Miss: Fetch and Store
             let (bytes, ct) = match proxy.fetch_origin(&url, true).await {
                 Ok(r) => r,
-                Err(_) => return Err(warp::reject::not_found()),
+                Err(_) => {
+                    let response = build_text_response(
+                        StatusCode::BAD_GATEWAY,
+                        "segment fetch failed".to_string(),
+                        "text/plain; charset=utf-8",
+                    );
+                    return Ok::<_, warp::Rejection>(response);
+                }
             };
 
             {
@@ -247,14 +308,24 @@ pub async fn run_proxy(port: u16) {
             let u = url.clone();
             tokio::spawn(async move { p.trigger_prefetch(&u).await; });
 
-            Ok::<_, warp::Rejection>(warp::reply::with_header(
-                warp::reply::Response::new(bytes.into()),
-                "Content-Type",
-                ct,
+            Ok::<_, warp::Rejection>(build_binary_response(
+                StatusCode::OK,
+                bytes,
+                &ct,
             ))
         });
 
-    warp::serve(pl_route.or(seg_route))
+    let preflight_route = warp::options()
+        .and(warp::path("proxy"))
+        .and(warp::path::tail())
+        .map(|_tail: warp::path::Tail| {
+            let mut response = Response::new(Vec::new());
+            *response.status_mut() = StatusCode::NO_CONTENT;
+            set_cors_headers(response.headers_mut());
+            response
+        });
+
+    warp::serve(preflight_route.or(pl_route).or(seg_route))
         .run(([0, 0, 0, 0], port))
         .await;
 }
