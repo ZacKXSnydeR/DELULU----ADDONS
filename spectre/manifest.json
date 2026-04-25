@@ -1,0 +1,30 @@
+{
+  "id": "spectre",
+  "name": "Spectre",
+  "version": "1.0.0",
+  "protocolVersion": "1.0",
+  "publisher": "tenz",
+  "publicKeyId": "delulu-official-v1",
+  "signature": "q/bNKQsAbMWCmBBCzh2rs+QePmVwbs8IjDWnZPaQA5oTqlTPFIA3++p3KMRGeuMrK/bJ3fPHXkvIxEWezmJlCg==",
+  "platformAssets": {
+    "windows-x64": {
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.0/spectre-windows-x64.exe",
+      "sha256": "419204bebbd572765a37fb1d01bd6e91ca54af491fc04fda6c5236f4a1f95cd0",
+      "binaryName": "spectre.exe",
+      "entryCommand": "rpc"
+    }
+  },
+  "capabilities": [
+    "resolveStream",
+    "healthCheck",
+    "selfProxy"
+  ],
+  "headerDefaults": {
+    "defaultOrigin": "https://cloudnestra.com",
+    "defaultReferer": "https://cloudnestra.com/",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+  },
+  "minAppVersion": "1.0.0",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS",
+  "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
+}

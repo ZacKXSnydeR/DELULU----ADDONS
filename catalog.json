@@ -16,5 +16,11 @@
     "name": "MetaResolver",
     "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/meta-resolver/manifest.json",
     "description": "Premium metadata and trailer utility — high-speed ID mapping and direct-play trailer resolver"
+  },
+  {
+    "id": "spectre",
+    "name": "Spectre",
+    "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/spectre/manifest.json",
+    "description": "Multi-mirror VidSrc scraper with built-in smart prefetching proxy"
   }
 ]
