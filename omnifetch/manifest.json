@@ -1,0 +1,30 @@
+{
+  "id": "omnifetch",
+  "name": "OmniFetch",
+  "version": "1.0.0",
+  "protocolVersion": "1.0",
+  "publisher": "delulu-official",
+  "publicKeyId": "delulu-official-v1",
+  "signature": "XGwR9zdi6zneAhQQGmb/nGLkII5PzSBY1OUbvTjv4naKQ3P8dR/YIg4/jMIF1Qf9KCncVaSEZTRtiqdemJRzCQ==",
+  "platformAssets": {
+    "windows-x64": {
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/omnifetch-v1.0.0/omnifetch-windows-x64.exe",
+      "sha256": "004fe705e16cbb8f9f5a03455c63c07dcfb6c2f2fa11bc3bd9c00b4e17c842de",
+      "binaryName": "omnifetch.exe",
+      "entryCommand": ""
+    }
+  },
+  "capabilities": [
+    "healthCheck",
+    "resolveTrailer",
+    "download",
+    "updateYtdlp",
+    "setup"
+  ],
+  "headerDefaults": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  },
+  "minAppVersion": "1.0.0",
+  "releaseNotesUrl": "",
+  "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
+}
