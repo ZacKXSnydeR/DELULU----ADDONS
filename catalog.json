@@ -22,5 +22,11 @@
     "name": "Spectre",
     "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/spectre/manifest.json",
     "description": "Multi-mirror VidSrc scraper with built-in smart prefetching proxy"
+  },
+  {
+    "id": "omnifetch",
+    "name": "OmniFetch",
+    "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/omnifetch/manifest.json",
+    "description": "All-in-one media engine — auto-updating yt-dlp binary, background multi-thread downloading, multi-audio trailer resolution, and subtitle fetcher"
   }
 ]

@@ -31,6 +31,22 @@ pub async fn search_detail_path(
     client: &Client,
     tmdb: &TmdbInfo,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    let mut all_results = Vec::new();
+
+    // 1. Try Mobile API first (Cleaner)
+    match crate::v3_mobile::search_mobile(client, tmdb).await {
+        Ok(items) => {
+            eprintln!("[moviebox] Mobile API returned {} candidates", items.len());
+            for item in items {
+                all_results.push(item);
+            }
+        }
+        Err(e) => {
+            eprintln!("[moviebox] Mobile API search failed: {}", e);
+        }
+    }
+
+    // 2. Try Web Scraping as fallback (or to supplement)
     // Generate multiple search variations to maximize hit rate
     let mut variations = vec![tmdb.title.clone()];
     if let Some(year) = tmdb.year {
@@ -43,157 +59,175 @@ pub async fn search_detail_path(
     // Add "Hindi" variation for regional availability
     variations.push(format!("{} Hindi", tmdb.title));
 
-    let title_l = tmdb.title.to_lowercase();
-    let tmdb_dur = tmdb.runtime.unwrap_or(0) * 60;
-    let expected_st = if tmdb.media_type == "tv" { 2 } else { 1 };
-
     for variant in &variations {
-        for page in 1..=2 { // Probe 2 pages for maximum depth
-            let slug = slugify(variant);
-            let url = if page == 1 {
-                format!("{}/web/searchResult?keyword={}", MOVIEBOX_HOST, urlencoding::encode(&slug))
-            } else {
-                format!("{}/web/searchResult?keyword={}&page={}", MOVIEBOX_HOST, urlencoding::encode(&slug), page)
-            };
+        let slug = slugify(variant);
+        let url = format!("{}/web/searchResult?keyword={}", MOVIEBOX_HOST, urlencoding::encode(&slug));
 
-            eprintln!("[moviebox] Searching (P{}): \"{}\" → {}", page, variant, &url[..url.len().min(80)]);
+        eprintln!("[moviebox] Scraping: \"{}\" → {}", variant, &url[..url.len().min(80)]);
 
-            let html = match http::http_get(client, &url).await {
-                Ok(h) => h,
-                Err(e) => {
-                    eprintln!("[moviebox] Search request failed: {}", e);
-                    continue;
-                }
-            };
-
+        if let Ok(html) = crate::http::http_get(client, &url).await {
             let re = Regex::new(r#"id="__NUXT_DATA__"[^>]*>(.*?)</script>"#).unwrap();
-            let cap = match re.captures(&html) {
-                Some(c) => c,
-                None => continue,
-            };
-
-            let raw: Vec<Value> = match serde_json::from_str(&cap[1]) {
-                Ok(r) => r,
-                Err(e) => {
-                    eprintln!("[moviebox] Nuxt JSON parse error: {}", e);
-                    continue;
-                }
-            };
-
-            // Nuxt hydration: integer refs point to other slots in the array
-            let hydrate = |val: &Value| -> Value {
-                if let Some(i) = val.as_u64() {
-                    if (i as usize) < raw.len() {
-                        return raw[i as usize].clone();
-                    }
-                }
-                val.clone()
-            };
-
-            let mut results = Vec::new();
-            for item in &raw {
-                if let Some(obj) = item.as_object() {
-                    if obj.contains_key("subjectId") && obj.contains_key("title") {
-                        let mut hydrated = serde_json::Map::new();
-                        for (k, v) in obj {
-                            hydrated.insert(k.clone(), hydrate(v));
-                        }
-                        results.push(Value::Object(hydrated));
-                    }
-                }
-            }
-
-            if results.is_empty() {
-                continue;
-            }
-
-            let mut scored_results: Vec<(f64, &Value)> = Vec::new();
-            
-            for (index, item) in results.iter().enumerate() {
-                let t = item["title"].as_str().unwrap_or("").to_lowercase();
-                let st = item["subjectType"].as_u64().unwrap_or(1);
-                let mb_dur = item["duration"].as_u64().unwrap_or(0);
-                let rd = item["releaseDate"].as_str().unwrap_or("");
-                let mb_year = if rd.len() >= 4 { &rd[0..4] } else { "" };
-
-                // --- HARD FILTERS ---
-                
-                // 1. Music/Trailer Filter
-                if st == 6 { continue; }
-
-                // 2. Strict Duration Guard (for Movies)
-                if tmdb.media_type == "movie" && tmdb_dur > 0 {
-                    if mb_dur == 0 { continue; } // Skip zero-duration placeholders
-                    let diff = (tmdb_dur as i32 - mb_dur as i32).abs();
-                    if diff > 600 { continue; } // HARD SKIP: Anything off by more than 10 mins
-                }
-
-                // --- SCORING ---
-
-                let mut score: f64 = 0.0;
-
-                // 1. Jaro-Winkler Title Matching (0.0 to 1.0 -> max 2000)
-                let similarity = jaro_winkler(&title_l, &t);
-                score += similarity * 2000.0;
-
-                // 2. Content type match preference
-                if st == expected_st as u64 {
-                    score += 500.0;
-                }
-
-                // 3. API order bonus
-                score += 100.0 - (index as f64).min(50.0);
-
-                // 4. Release year verification
-                if let Some(y) = tmdb.year {
-                    let y_str = y.to_string();
-                    if mb_year == y_str {
-                        score += 800.0;
-                    } else if !mb_year.is_empty() {
-                        if let Ok(m_year) = mb_year.parse::<i32>() {
-                            if (m_year - y).abs() <= 1 {
-                                score += 300.0;
+            if let Some(cap) = re.captures(&html) {
+                if let Ok(raw) = serde_json::from_str::<Vec<Value>>(&cap[1]) {
+                    // Nuxt hydration
+                    let hydrate = |val: &Value| -> Value {
+                        if let Some(i) = val.as_u64() {
+                            if (i as usize) < raw.len() {
+                                return raw[i as usize].clone();
                             }
                         }
-                    }
-                }
+                        val.clone()
+                    };
 
-                // 5. High-precision Duration Match Bonus
-                if tmdb.media_type == "movie" && tmdb_dur > 0 {
-                    let diff = (tmdb_dur as i32 - mb_dur as i32).abs();
-                    if diff <= 120 {
-                        score += 1000.0;
-                    }
-                }
-
-                scored_results.push((score, item));
-            }
-
-            scored_results.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
-
-            if let Some((score, best)) = scored_results.first() {
-                eprintln!(
-                    "[moviebox]   Top match: \"{}\" score={:.2} dur={} id={}",
-                    best["title"].as_str().unwrap_or("?"),
-                    score,
-                    best["duration"].as_u64().unwrap_or(0),
-                    best["subjectId"].as_str().unwrap_or("?")
-                );
-
-                if *score > 2500.0 {
-                    if let Some(path) = best["detailPath"].as_str() {
-                        eprintln!("[moviebox] Selected: \"{}\" (score={:.2})", best["title"].as_str().unwrap_or("?"), score);
-                        return Ok(format!("detail/{}", path));
+                    for item in &raw {
+                        if let Some(obj) = item.as_object() {
+                            if obj.contains_key("subjectId") && obj.contains_key("title") {
+                                let mut hydrated = serde_json::Map::new();
+                                for (k, v) in obj {
+                                    hydrated.insert(k.clone(), hydrate(v));
+                                }
+                                all_results.push(Value::Object(hydrated));
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    Err("No content found matching title, type, and strict duration requirements".into())
-}
+    if all_results.is_empty() {
+        return Err("No content found on either Mobile or Web APIs".into());
+    }
 
-/// Map TMDB season/episode to MovieBox's internal 1-indexed `se`/`ep`.
+    // 3. Score all results using Jaro-Winkler and Duration Guard
+    let title_l = tmdb.title.to_lowercase();
+    let tmdb_dur = tmdb.runtime.unwrap_or(0) * 60;
+    let expected_st = if tmdb.media_type == "tv" { 2 } else { 1 };
+
+    let mut scored_results: Vec<(f64, Value)> = Vec::new();
+    let mut seen_ids = std::collections::HashSet::new();
+
+    for (index, item) in all_results.into_iter().enumerate() {
+        let sid = item["subjectId"].as_str().or(item["id"].as_str()).unwrap_or("").to_string();
+        if sid.is_empty() || seen_ids.contains(&sid) {
+            continue;
+        }
+        seen_ids.insert(sid);
+
+        let t = item["title"].as_str().unwrap_or("").to_lowercase();
+        let st = item["subjectType"].as_u64().unwrap_or(1);
+        let mb_dur = item["duration"].as_u64().unwrap_or(0);
+        let rd = item["releaseDate"].as_str().unwrap_or("");
+        let mb_year = if rd.len() >= 4 { &rd[0..4] } else { "" };
+
+        // --- HARD FILTERS ---
+        
+        // 1. Music/Trailer Filter
+        if st == 6 { continue; }
+
+        // 2. Strict Duration Guard (for Movies)
+        if tmdb.media_type == "movie" && tmdb_dur > 0 {
+            if mb_dur == 0 { continue; } // Skip zero-duration placeholders
+            let diff = (tmdb_dur as i32 - mb_dur as i32).abs();
+            if diff > 60 { continue; } // HARD SKIP: Anything off by more than 1 min
+        }
+
+        // --- SCORING ---
+
+        let mut score: f64 = 0.0;
+
+        // 1. Jaro-Winkler Title Matching (max 2000)
+        let similarity = jaro_winkler(&title_l, &t);
+        score += similarity * 2000.0;
+
+        // 2. Content type match preference
+        if st == expected_st as u64 {
+            score += 500.0;
+        }
+
+        // 3. Discovery order bonus (within its source)
+        score += 100.0 - (index as f64).min(50.0);
+
+        // 4. Release year verification
+        if let Some(y) = tmdb.year {
+            let y_str = y.to_string();
+            if mb_year == y_str {
+                score += 800.0;
+            } else if !mb_year.is_empty() {
+                if let Ok(m_year) = mb_year.parse::<i32>() {
+                    if (m_year - y).abs() <= 1 {
+                        score += 300.0;
+                    }
+                }
+            }
+        }
+
+        // 5. High-precision Duration Match Bonus
+        if tmdb.media_type == "movie" && tmdb_dur > 0 {
+            let diff = (tmdb_dur as i32 - mb_dur as i32).abs();
+            if diff <= 10 {
+                score += 1000.0;
+            }
+        }
+
+        scored_results.push((score, item));
+    }
+
+    scored_results.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+
+    if let Some((score, best)) = scored_results.first() {
+        eprintln!(
+            "[moviebox]   Top match: \"{}\" score={:.2} dur={} id={}",
+            best["title"].as_str().unwrap_or("?"),
+            score,
+            best["duration"].as_u64().unwrap_or(0),
+            best["subjectId"].as_str().or(best["id"].as_str()).unwrap_or("?")
+        );
+
+        if *score > 2000.0 {
+            let path = best["detailPath"].as_str()
+                .or(best["detail_path"].as_str())
+                .map(|p| p.to_string());
+            
+            if let Some(p) = path {
+                return Ok(format!("detail/{}", p));
+            }
+        }
+    }
+
+    Err("No content found matching title, type, and strict duration requirements".into())
+    }
+
+    #[cfg(test)]
+    mod tests {
+    use super::*;
+    use crate::models::TmdbInfo;
+    use crate::http;
+
+    #[tokio::test]
+    async fn test_interstellar_mobile_search() {
+        let client = http::build_client();
+        let tmdb = TmdbInfo {
+            _tmdb_id: 157336,
+            title: "Interstellar".to_string(),
+            original_title: "Interstellar".to_string(),
+            year: Some(2014),
+            runtime: Some(169),
+            media_type: "movie".to_string(),
+            season: None,
+            episode: None,
+            absolute_episode_offset: 0,
+        };
+
+        let result = search_detail_path(&client, &tmdb).await;
+        assert!(result.is_ok(), "Should find Interstellar: {:?}", result.err());
+        let path = result.unwrap();
+        assert!(path.contains("interstellar"), "Path should contain interstellar: {}", path);
+        println!("[TEST] Found path: {}", path);
+    }
+    }
+
+    /// Map TMDB season/episode to MovieBox's internal 1-indexed `se`/`ep`.
 ///
 /// Improved logic handles absolute episode numbering for Anime/long-running shows.
 pub fn map_episode_indices(
@@ -378,6 +412,64 @@ pub async fn get_play_links_with_retry(
         Err(e) => Err(e),
     }
 }
+
+/// Fetch all available stream links with 401 auto-retry and Mobile API fallback.
+pub async fn get_play_links_hybrid(
+    client: &Client,
+    subject_id: &str,
+    detail_path: &str,
+    se: u32,
+    ep: u32,
+    auth: &Auth,
+) -> Result<(Vec<Value>, Auth), Box<dyn std::error::Error + Send + Sync>> {
+    // 1. Try Web Extraction (H5/Player API) first
+    let web_res = get_play_links_with_retry(client, subject_id, detail_path, se, ep, auth).await;
+    
+    match web_res {
+        Ok((links, fresh_auth)) if !links.is_empty() => {
+            eprintln!("[moviebox] Web extraction successful ({} links)", links.len());
+            return Ok((links, fresh_auth));
+        }
+        _ => {
+            eprintln!("[moviebox] Web extraction failed or empty — falling back to Mobile API...");
+        }
+    }
+
+    // 2. Fallback to Mobile API extraction
+    match crate::v3_mobile::get_resource_mobile(client, subject_id, se, ep).await {
+        Ok(items) if !items.is_empty() => {
+            eprintln!("[moviebox] Mobile extraction successful ({} links)", items.len());
+            // Map mobile items to match the H5 link format (expected by proxy.rs)
+            let mut mapped_links = Vec::new();
+            for item in items {
+                let mut mapped = item.clone();
+                // Ensure 'resolutions' field exists for proxy.rs quality detection
+                if mapped.get("resolutions").is_none() {
+                    let res = mapped.get("resolution")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string());
+                    
+                    if let Some(res_str) = res {
+                        if let Some(obj) = mapped.as_object_mut() {
+                            obj.insert("resolutions".to_string(), Value::String(res_str));
+                        }
+                    }
+                }
+                mapped_links.push(mapped);
+            }
+            return Ok((mapped_links, auth.clone()));
+        }
+        Ok(_) => {
+            eprintln!("[moviebox] Mobile extraction returned zero links");
+        }
+        Err(e) => {
+            eprintln!("[moviebox] Mobile extraction failed: {}", e);
+        }
+    }
+
+    Err("All extraction methods (Web & Mobile) failed to find playable links".into())
+}
+
 
 /// Fetch available subtitles (captions) for a subject.
 pub async fn get_captions(

@@ -3,12 +3,14 @@
 //! All diagnostic logging goes to STDERR (safe for RPC).
 
 mod auth;
+mod crypto;
 mod http;
 mod models;
 mod moviebox;
 mod proxy;
 mod state;
 mod tmdb;
+mod v3_mobile;
 
 use std::collections::HashMap;
 use std::io::{self, BufRead, Write};
@@ -165,7 +167,7 @@ async fn resolve_stream(params: ResolveStreamParams) -> StreamResult {
         let client_cl = client.clone();
         let auth_cl = auth.clone();
         handles.push(tokio::spawn(async move {
-            let res = moviebox::get_play_links_with_retry(&client_cl, &sid, &dp, se, ep, &auth_cl).await;
+            let res = moviebox::get_play_links_hybrid(&client_cl, &sid, &dp, se, ep, &auth_cl).await;
             (v_name, res)
         }));
     }
