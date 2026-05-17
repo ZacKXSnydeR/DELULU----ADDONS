@@ -1,11 +1,11 @@
 {
-  "id": "com.delulu.flexy",
+  "id": "flexy",
   "name": "Flexy",
   "version": "1.0.0",
   "protocolVersion": "1.0",
   "publisher": "zackxsnyder",
   "publicKeyId": "delulu-official-v1",
-  "signature": "HjjwRxBhXivIL3l18FvZ2B6iMRyXkrtD9AZ1Tf2jBnubNCY6ZUMG2uCzzaYZm7iqM4w6Ct0C2Op47qFoBAOBCA==",
+  "signature": "mYfZtBOucSRDbniJTlkvoM/bXezg+Wm8avhdGQGEnk6GE1sIKn+FKCm7PFxfknFo6hHvnmxoohhPVhP1Xy94CQ==",
   "platformAssets": {
     "windows-x64": {
       "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/flexy-v1.0.0/flexy-windows-x64.exe",
