@@ -1,0 +1,29 @@
+{
+  "id": "com.delulu.flexy",
+  "name": "Flexy",
+  "version": "1.0.0",
+  "protocolVersion": "1.0",
+  "publisher": "zackxsnyder",
+  "publicKeyId": "delulu-official-v1",
+  "signature": "HjjwRxBhXivIL3l18FvZ2B6iMRyXkrtD9AZ1Tf2jBnubNCY6ZUMG2uCzzaYZm7iqM4w6Ct0C2Op47qFoBAOBCA==",
+  "platformAssets": {
+    "windows-x64": {
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/flexy-v1.0.0/flexy-windows-x64.exe",
+      "sha256": "6855bdcd183a65b1a6f04cd2c6a30c1728d216aa940c398d2c5f3141c227aca2",
+      "binaryName": "flexy.exe",
+      "entryCommand": "rpc"
+    }
+  },
+  "capabilities": [
+    "resolveStream",
+    "healthCheck"
+  ],
+  "headerDefaults": {
+    "defaultOrigin": "https://flixhq.one",
+    "defaultReferer": "https://flixhq.one/",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+  },
+  "minAppVersion": "1.0.0",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/flexy-v1.0.0",
+  "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
+}

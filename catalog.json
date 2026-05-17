@@ -28,5 +28,11 @@
     "name": "OmniFetch",
     "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/omnifetch/manifest.json",
     "description": "All-in-one media engine — auto-updating yt-dlp binary, background multi-thread downloading, multi-audio trailer resolution, and subtitle fetcher"
+  },
+  {
+    "id": "com.delulu.flexy",
+    "name": "Flexy",
+    "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/flexy/manifest.json",
+    "description": "FlixHQ/RabbitStream pure API stream resolver — encrypted extraction with AES-GCM decryption"
   }
 ]
