@@ -5,7 +5,7 @@ mod videasy;
 mod wasm;
 
 use models::{JsonRpcRequest, JsonRpcResponse, JsonRpcError, ResolveStreamParams, StreamResult};
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, Write};
 use std::sync::Arc;
 
 #[tokio::main]
@@ -50,7 +50,10 @@ async fn main() {
                         result: None,
                         error: Some(err),
                     };
-                    println!("{}", serde_json::to_string(&res).unwrap());
+                    if let Ok(json) = serde_json::to_string(&res) {
+                        let _ = writeln!(io::stdout(), "{}", json);
+                        let _ = io::stdout().flush();
+                    }
                     continue;
                 }
             };
@@ -91,18 +94,25 @@ async fn main() {
                 
                 // Rewrite audios to use proxy
                 let mut proxied_audios = std::collections::HashMap::new();
+                let mut best_proxied_url = None;
+
                 for (audio_name, qualities) in audios_orig {
                     let mut p_qualities = std::collections::HashMap::new();
                     for (quality, _) in qualities {
                         let p_url = format!("{}/s/{}/{}/{}", base, session_id, urlencoding::encode(&audio_name), urlencoding::encode(&quality));
-                        p_qualities.insert(quality, p_url);
+                        p_qualities.insert(quality.clone(), p_url.clone());
+                        
+                        if best_proxied_url.is_none() || (audio_name == "Original Audio" && quality.contains("1080p")) {
+                            best_proxied_url = Some(p_url);
+                        }
                     }
                     proxied_audios.insert(audio_name, p_qualities);
                 }
                 
                 result.audios = Some(proxied_audios);
-                result.stream_url = None; // No longer returning a single stream_url
+                result.stream_url = best_proxied_url;
                 result.proxy_port = Some(proxy_port);
+                result.session_id = Some(session_id);
                 result.self_proxy = Some(true);
                 result.headers = Some(models::StreamHeaders {
                     referer: None,
@@ -121,7 +131,10 @@ async fn main() {
                 error: None,
             };
 
-            println!("{}", serde_json::to_string(&response).unwrap());
+            if let Ok(json) = serde_json::to_string(&response) {
+                let _ = writeln!(io::stdout(), "{}", json);
+                let _ = io::stdout().flush();
+            }
             
         } else if req.method == "healthCheck" {
             let res = serde_json::json!({
@@ -130,7 +143,8 @@ async fn main() {
                 "protocolVersion": "1.0",
                 "result": {"ok": true, "version": "1.0.0"}
             });
-            println!("{}", res);
+            let _ = writeln!(io::stdout(), "{}", res);
+            let _ = io::stdout().flush();
         } else {
             let err = JsonRpcError { code: -32601, message: "Method not found".to_string() };
             let res: JsonRpcResponse<()> = JsonRpcResponse {
@@ -140,7 +154,10 @@ async fn main() {
                 result: None,
                 error: Some(err),
             };
-            println!("{}", serde_json::to_string(&res).unwrap());
+            if let Ok(json) = serde_json::to_string(&res) {
+                let _ = writeln!(io::stdout(), "{}", json);
+                let _ = io::stdout().flush();
+            }
         }
     }
 }

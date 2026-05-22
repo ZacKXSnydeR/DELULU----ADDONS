@@ -58,6 +58,8 @@ pub struct StreamResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub proxy_port: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub self_proxy: Option<bool>,
 }
 
@@ -68,6 +70,7 @@ impl StreamResult {
             error_code: Some(code.into()),
             error_message: Some(message.into()),
             proxy_port: None,
+            session_id: None,
             self_proxy: None,
             audios: None,
             ..Default::default()

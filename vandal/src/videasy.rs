@@ -125,6 +125,7 @@ pub async fn resolve_videasy(
         error_code: None,
         error_message: None,
         proxy_port: None,
+        session_id: None,
         self_proxy: None,
     })
 }
