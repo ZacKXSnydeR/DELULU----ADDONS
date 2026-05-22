@@ -34,5 +34,11 @@
     "name": "Flexy",
     "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/flexy/manifest.json",
     "description": "FlixHQ/RabbitStream pure API stream resolver — encrypted extraction with AES-GCM decryption"
+  },
+  {
+    "id": "vandal",
+    "name": "Vandal",
+    "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/vandal/manifest.json",
+    "description": "Pure-Rust resolver engine with built-in multi-audio and resolution routing."
   }
 ]
