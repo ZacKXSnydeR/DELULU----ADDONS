@@ -237,14 +237,34 @@ fn rewrite_playlist(body: &str, base_url: &str, proxy_base: &str) -> String {
         if trimmed.is_empty() { out.push('\n'); continue; }
 
         let mut rewritten = line.to_string();
+
+        // Hack to bypass strict codec checking in hls.js for HEVC/4K streams
+        if rewritten.starts_with("#EXT-X-STREAM-INF:") || rewritten.starts_with("#EXT-X-I-FRAME-STREAM-INF:") || rewritten.starts_with("#EXT-X-MEDIA:") {
+            if let Some(codec_idx) = rewritten.find("CODECS=\"") {
+                if let Some(end_idx) = rewritten[codec_idx + 8..].find('"') {
+                    let full_attr = &rewritten[codec_idx..codec_idx + 8 + end_idx + 1];
+                    rewritten = rewritten.replace(full_attr, "");
+                    rewritten = rewritten.replace(",,", ",");
+                    rewritten = rewritten.replace(":,", ":");
+                    if rewritten.ends_with(',') {
+                        rewritten.pop();
+                    }
+                }
+            }
+        }
+
         if rewritten.contains("URI=\"") {
-            while let Some(start) = rewritten.find("URI=\"") {
-                let attr_start = start + 5;
+            let mut search_start = 0;
+            while let Some(start) = rewritten[search_start..].find("URI=\"") {
+                let actual_start = search_start + start;
+                let attr_start = actual_start + 5;
                 if let Some(end) = rewritten[attr_start..].find('"') {
                     let uri = &rewritten[attr_start..attr_start + end].to_string();
                     let abs = resolve_url(base_url, uri);
                     let token = encode_b64(&abs);
-                    rewritten = format!("{}{}/b64/{}{}", &rewritten[..attr_start], proxy_base, token, &rewritten[attr_start+end..]);
+                    let replacement = format!("{}/b64/{}", proxy_base, token);
+                    rewritten = format!("{}{}{}", &rewritten[..attr_start], replacement, &rewritten[attr_start+end..]);
+                    search_start = attr_start + replacement.len() + 1;
                 } else { break; }
             }
         }
