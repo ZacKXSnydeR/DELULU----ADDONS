@@ -91,20 +91,25 @@ pub async fn resolve_videasy(
     // Fallback to the first source if no priority matched
     let stream_url = best_source.unwrap_or_else(|| resp.sources[0].url.clone());
 
-    // Map all sources to qualities
+    // Map all sources to qualities grouped by provider
     let mut audios = std::collections::HashMap::new();
-    let mut qualities = std::collections::HashMap::new();
     
     for src in &resp.sources {
-        let q = src.quality.as_deref().unwrap_or("Unknown");
-        let p = src.provider.as_deref().unwrap_or("cdn");
-        let label = format!("{}_{}", p, q);
-        qualities.insert(label, src.url.clone());
+        let q = src.quality.as_deref().unwrap_or("Unknown").to_string();
+        let p = src.provider.as_deref().unwrap_or("cdn").to_uppercase();
+        
+        audios.entry(p)
+            .or_insert_with(std::collections::HashMap::new)
+            .insert(q, src.url.clone());
     }
     
-    // Ensure 'Auto' or 'best' is present
-    qualities.insert("Auto".to_string(), stream_url.clone());
-    audios.insert("Original Audio".to_string(), qualities);
+    // Add 'Auto' or 'best' to the provider that holds the primary stream_url
+    if let Some(best_src) = resp.sources.iter().find(|s| s.url == stream_url) {
+        let p = best_src.provider.as_deref().unwrap_or("cdn").to_uppercase();
+        audios.entry(p)
+            .or_insert_with(std::collections::HashMap::new)
+            .insert("Auto".to_string(), stream_url.clone());
+    }
 
     // 5. Map subtitles
     let subtitles: Vec<Subtitle> = resp.subtitles.into_iter().map(|s| Subtitle {

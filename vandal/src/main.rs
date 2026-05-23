@@ -102,7 +102,7 @@ async fn main() {
                         let p_url = format!("{}/s/{}/{}/{}", base, session_id, urlencoding::encode(&audio_name), urlencoding::encode(&quality));
                         p_qualities.insert(quality.clone(), p_url.clone());
                         
-                        if best_proxied_url.is_none() || (audio_name == "Original Audio" && quality.contains("1080p")) {
+                        if best_proxied_url.is_none() || (quality.contains("1080p") && best_proxied_url.as_ref().map_or(true, |u: &String| !u.contains("1080p"))) {
                             best_proxied_url = Some(p_url);
                         }
                     }
