@@ -6,9 +6,11 @@ use crate::crypto;
 use crate::wasm::WasmDecryptor;
 use crate::models::{StreamResult, StreamHeaders, Subtitle, VideasyResponse};
 
+use std::sync::Arc;
+
 pub async fn resolve_videasy(
     client: &reqwest::Client,
-    decryptor: &WasmDecryptor,
+    decryptor: Arc<WasmDecryptor>,
     tmdb_id: u64,
     media_type: &str,
     season: Option<u32>,
@@ -41,8 +43,10 @@ pub async fn resolve_videasy(
     ];
     
     if media_type == "tv" {
-        params.push(("season", season.unwrap_or(1).to_string()));
-        params.push(("episode", episode.unwrap_or(1).to_string()));
+        params.push(("seasonId", season.unwrap_or(1).to_string()));
+        params.push(("episodeId", episode.unwrap_or(1).to_string()));
+        let total_seasons = tmdb_resp["number_of_seasons"].as_u64().unwrap_or(1);
+        params.push(("totalSeasons", total_seasons.to_string()));
     }
 
     let mut headers = HeaderMap::new();
@@ -50,32 +54,68 @@ pub async fn resolve_videasy(
     headers.insert(REFERER, HeaderValue::from_static("https://player.videasy.net/"));
     headers.insert(ORIGIN, HeaderValue::from_static("https://player.videasy.net"));
 
-    let videasy_url = "https://api.videasy.net/cdn/sources-with-title";
+    let providers = vec![
+        "mb-flix", "meine", "overflix", "visioncine", 
+        "hdmovie", "cuevana", "primewire", "1movies", 
+        "primesrcme", "m4uhd", "cdn", "superflix", 
+        "moviebox", "lamovie"
+    ];
+
+    let mut tasks = Vec::new();
+
+    for provider in providers {
+        let p = provider.to_string();
+        let client_cl = client.clone();
+        let decryptor_cl = Arc::clone(&decryptor);
+        let params_cl = params.clone();
+        let headers_cl = headers.clone();
+        
+        tasks.push(tokio::spawn(async move {
+            let url = format!("https://api.videasy.net/{}/sources-with-title", p);
+            
+            let encrypted_hex = client_cl.get(&url)
+                .query(&params_cl)
+                .headers(headers_cl)
+                .send().await.ok()?
+                .text().await.ok()?
+                .trim()
+                .to_string();
+                
+            if encrypted_hex.is_empty() || encrypted_hex.contains("Not found") {
+                return None;
+            }
+            
+            let b64_str = decryptor_cl.decrypt(&encrypted_hex, tmdb_id as f64).ok()?;
+            let json_str = crate::crypto::decrypt_cryptojs_aes(&b64_str, "").ok()?;
+            
+            let mut resp: VideasyResponse = serde_json::from_str(&json_str).ok()?;
+            
+            for s in &mut resp.sources {
+                s.provider = Some(p.clone());
+            }
+            
+            Some(resp)
+        }));
+    }
+
+    let mut all_sources = Vec::new();
+    let mut all_subtitles = Vec::new();
+
+    for task in tasks {
+        if let Ok(Some(resp)) = task.await {
+            all_sources.extend(resp.sources);
+            all_subtitles.extend(resp.subtitles);
+        }
+    }
+
+    if all_sources.is_empty() {
+        return Ok(StreamResult::error("NO_STREAM", "Videasy API returned no content across all providers"));
+    }
     
-    let encrypted_hex = client.get(videasy_url)
-        .query(&params)
-        .headers(headers.clone())
-        .send().await?
-        .text().await?
-        .trim()
-        .to_string();
-
-    if encrypted_hex.is_empty() || encrypted_hex.contains("Not found") {
-        return Ok(StreamResult::error("NO_STREAM", "Videasy API returned no content"));
-    }
-
-    // 3. Decrypt payload (WASM -> AES)
-    let b64_str = decryptor.decrypt(&encrypted_hex, tmdb_id as f64)
-        .map_err(|e| anyhow!("WASM Decryption failed: {}", e))?;
-        
-    let json_str = crypto::decrypt_cryptojs_aes(&b64_str, "")
-        .map_err(|e| anyhow!("CryptoJS AES Decryption failed: {}", e))?;
-        
-    let resp: VideasyResponse = serde_json::from_str(&json_str)?;
-
-    if resp.sources.is_empty() {
-        return Ok(StreamResult::error("NO_STREAM", "Decrypted JSON contains no sources"));
-    }
+    let resp = VideasyResponse {
+        sources: all_sources,
+        subtitles: all_subtitles,
+    };
 
     // 4. Select the best source (prioritize 1080p, Auto, 4K, 720p)
     let mut best_source = None;

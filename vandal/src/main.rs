@@ -63,7 +63,7 @@ async fn main() {
             
             let mut result = match videasy::resolve_videasy(
                 &client_cl,
-                &decryptor_cl,
+                decryptor_cl,
                 params.tmdb_id,
                 &params.media_type,
                 params.season,

@@ -97,7 +97,11 @@ impl WasmDecryptor {
         
         let expected_len = hex_str.len() / 2;
         if base64_str.len() > expected_len {
-            base64_str.truncate(expected_len);
+            let mut cut_len = expected_len;
+            while cut_len > 0 && !base64_str.is_char_boundary(cut_len) {
+                cut_len -= 1;
+            }
+            base64_str.truncate(cut_len);
         }
 
         Ok(base64_str)
