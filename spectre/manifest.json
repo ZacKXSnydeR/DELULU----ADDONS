@@ -1,30 +1,28 @@
 {
   "id": "spectre",
   "name": "Spectre",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "protocolVersion": "1.0",
   "publisher": "tenz",
   "publicKeyId": "delulu-official-v1",
-  "signature": "Y74xWnMe+xzoLzm0DYw7dU03vbUq0svHtCYIZBYMUWhJlLGIXtWY2lshJzLs2aEjg4sqT0BbUExVxU+uO78lBA==",
+  "signature": "hvjhYRrRuTk7kBcZ1qkAMnyUP102bN8Gvcq9Dv8i/RSljJfEVi4t40NPUbUQGv/JEn4ObT9l91G2wHunBWf+Bw==",
   "platformAssets": {
     "windows-x64": {
-      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.1/spectre-windows-x64.exe",
-      "sha256": "232f969133e9728604246970f40f2984687e8cff65d94a76e2f705bce6797548",
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.1.0/spectre-windows-x64.exe",
+      "sha256": "16b0d0838c8970b9e4647c3be5acbb717f89bebf7b7810470f3a53ec66967d2b",
       "binaryName": "spectre.exe",
       "entryCommand": "rpc"
     }
   },
-  "capabilities": [
-    "resolveStream",
-    "healthCheck",
-    "selfProxy"
-  ],
-  "headerDefaults": {
-    "defaultOrigin": "https://cloudnestra.com",
-    "defaultReferer": "https://cloudnestra.com/",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+  "capabilities": {
+    "http_stream": true,
+    "self_proxy": true,
+    "multi_audio": false,
+    "resolve_trailers": false,
+    "mapping_id": false,
+    "health_check": true
   },
-  "minAppVersion": "1.0.0",
+  "minAppVersion": "1.1.0",
   "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS",
   "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
 }

@@ -23,7 +23,6 @@ pub struct MediaQuery {
     pub media_type: MediaType,
     pub season: Option<u32>,
     pub episode: Option<u32>,
-    pub bypass_path: Option<String>,
 }
 
 impl std::fmt::Display for MediaQuery {

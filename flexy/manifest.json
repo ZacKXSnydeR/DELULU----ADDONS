@@ -1,29 +1,28 @@
 {
   "id": "flexy",
   "name": "Flexy",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "protocolVersion": "1.0",
   "publisher": "zackxsnyder",
   "publicKeyId": "delulu-official-v1",
-  "signature": "mYfZtBOucSRDbniJTlkvoM/bXezg+Wm8avhdGQGEnk6GE1sIKn+FKCm7PFxfknFo6hHvnmxoohhPVhP1Xy94CQ==",
+  "signature": "mQG6K6mF38YfS0BYWevyDSGxZGEXb4aLQQL2d7m+fz/TWAHVec68fEEe3HnAi5LXsujuLu0TgYWFV+u5qvP0Ag==",
   "platformAssets": {
     "windows-x64": {
-      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/flexy-v1.0.0/flexy-windows-x64.exe",
-      "sha256": "6855bdcd183a65b1a6f04cd2c6a30c1728d216aa940c398d2c5f3141c227aca2",
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/flexy-v1.1.0/flexy-windows-x64.exe",
+      "sha256": "481d4640b936e072ca3a97fb090a69cbd14069d0f493f7752706e0dffa81f6c8",
       "binaryName": "flexy.exe",
       "entryCommand": "rpc"
     }
   },
-  "capabilities": [
-    "resolveStream",
-    "healthCheck"
-  ],
-  "headerDefaults": {
-    "defaultOrigin": "https://flixhq.one",
-    "defaultReferer": "https://flixhq.one/",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+  "capabilities": {
+    "http_stream": true,
+    "self_proxy": false,
+    "multi_audio": false,
+    "resolve_trailers": false,
+    "mapping_id": false,
+    "health_check": true
   },
-  "minAppVersion": "1.0.0",
-  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/flexy-v1.0.0",
+  "minAppVersion": "1.1.0",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/flexy-v1.1.0",
   "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
 }

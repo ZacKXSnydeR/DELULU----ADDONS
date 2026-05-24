@@ -5,31 +5,14 @@ use crate::models::{ApiResponse, MediaQuery, MediaType, Output};
 
 // ── Token generation ─────────────────────────────────────────────────────────
 
-/// Executes the headless WASM bypass shim in Node.js to generate the Vidlink authentication token.
-pub async fn generate_api_token(media_id: &str, bypass_path: &Option<String>) -> Result<String> {
-    // Implement centralized path resolver integration
-    let bypass_script_path = if let Some(p) = bypass_path {
-        let path = std::path::PathBuf::from(p);
-        if !path.exists() {
-            bail!("Injected bypass path does not exist: {:?}", path);
-        }
-        path
-    } else {
-        // Fallback for independent CLI testing
-        let exe_path =
-            std::env::current_exe().context("Failed to determine current executable path")?;
+/// Generates the Vidlink authentication token by running the embedded bypass
+/// WASM shim via Node.js.  All required files (bypass.js, fu.wasm, wasm_exec.js,
+/// libsodium) are compiled into the binary and extracted on first run.
+pub async fn generate_api_token(media_id: &str) -> Result<String> {
+    let bypass_script_path = crate::embedded_bypass::ensure_bypass_extracted()
+        .context("Failed to extract embedded bypass runtime")?;
 
-        let fallback = exe_path
-            .parent()
-            .context("Executable has no parent directory")?
-            .join("bypass/bypass.js");
-
-        if !fallback.exists() {
-            bail!("Bypass script not found at fallback path: {:?}", fallback);
-        }
-        fallback
-    };
-
+    // Prefer a bundled node.exe next to bypass.js, fall back to system `node`
     let node_exe_path = bypass_script_path
         .parent()
         .context("Bypass script has no parent directory")?
@@ -106,7 +89,7 @@ fn build_client() -> Result<Client> {
 // ── Public fetch entry-point ─────────────────────────────────────────────────
 
 pub async fn fetch_media(query: MediaQuery) -> Result<Output> {
-    let token = generate_api_token(&query.tmdb_id, &query.bypass_path).await?;
+    let token = generate_api_token(&query.tmdb_id).await?;
 
     let url = build_url(&query, &token)?;
 

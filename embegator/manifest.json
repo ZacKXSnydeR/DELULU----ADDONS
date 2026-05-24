@@ -1,36 +1,34 @@
 {
   "id": "embegator",
   "name": "EmbeGator",
-  "version": "1.0.1",
+  "version": "1.2.0",
   "protocolVersion": "1.0",
   "publisher": "zackxsnyder",
   "publicKeyId": "delulu-official-v1",
-  "signature": "C0rj3/7a4v23jofzwCzMDbL7Mfy7gSMCOmsJsmXIxekm+JGkVPGGhvSuY651XPWxscOCS8TGqY5evkwqmTZ3Bw==",
+  "signature": "OwTINc+CKBOS5K/7n14QibsxKBQ6pABc0K5BoU26zMBlZ036i0lg7HSOZtk55h3QfOLallrw6y+DXvMDs/GWAA==",
   "platformAssets": {
     "windows-x64": {
-      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.1/embegator-windows-x64.exe",
-      "sha256": "9b0195d2b496e4110b415d2626558a1a3be61f4c0df70c2f449541658179caba",
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.2.0/embegator-windows-x64.exe",
+      "sha256": "30d6e0735c1769de1966e42aeefd1e103cfc76f3b87cc261e2dc7a57471dfbe0",
       "binaryName": "embegator.exe",
       "entryCommand": "rpc"
     },
     "windows-x86": {
-      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.1/embegator-windows-x86.exe",
-      "sha256": "fd71ac192958950faf26e60f1d0b871d5e736e0374c05cb4aeb89515883bbcb6",
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.2.0/embegator-windows-x86.exe",
+      "sha256": "30d6e0735c1769de1966e42aeefd1e103cfc76f3b87cc261e2dc7a57471dfbe0",
       "binaryName": "embegator.exe",
       "entryCommand": "rpc"
     }
   },
-  "capabilities": [
-    "stream.resolve",
-    "subtitle.list",
-    "health.check"
-  ],
-  "headerDefaults": {
-    "defaultOrigin": "https://vidlink.pro",
-    "defaultReferer": "https://vidlink.pro/",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+  "capabilities": {
+    "http_stream": true,
+    "self_proxy": true,
+    "multi_audio": false,
+    "resolve_trailers": false,
+    "mapping_id": false,
+    "health_check": true
   },
-  "minAppVersion": "1.0.0",
-  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/v1.0.1",
+  "minAppVersion": "1.1.0",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/v1.2.0",
   "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
 }
