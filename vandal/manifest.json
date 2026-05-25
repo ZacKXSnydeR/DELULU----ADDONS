@@ -1,13 +1,13 @@
 {
   "id": "vandal",
   "name": "Vandal",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "protocolVersion": "1.0",
   "publisher": "zackxsnyder",
   "publicKeyId": "delulu-official-v1",
   "platformAssets": {
     "windows-x64": {
-      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/vandal-v1.0.7/vandal-windows-x64.exe",
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/vandal-v1.0.8/vandal-windows-x64.exe",
       "sha256": "f6b660621f363eead5bd0efc8bda6f40375589c546027f7e0bb7cbc8114a7734",
       "binaryName": "vandal-windows-x64.exe",
       "entryCommand": ""
@@ -24,7 +24,7 @@
   },
   "headerDefaults": null,
   "minAppVersion": "1.1.0",
-  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/vandal-v1.0.7",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/vandal-v1.0.8",
   "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS",
-  "signature": "8pHuLnEGahEH57JaggtGNSm7kQ8TCooN5I//Mhhi7o+OXlAHevj2v+vPYYFhRe6dgxGRNzf3ss10YiEC4w/FAg=="
+  "signature": "yBdeADjGdwWl2eu+vDdDvrChiItUvoQsRPS8cIPiTD8I9IxfPfZdcxDVGrIx2KujS9+CT67VNKrC2GKezf6wCg=="
 }

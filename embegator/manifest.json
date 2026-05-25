@@ -1,21 +1,15 @@
 {
   "id": "embegator",
   "name": "EmbeGator",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "protocolVersion": "1.0",
   "publisher": "zackxsnyder",
   "publicKeyId": "delulu-official-v1",
-  "signature": "PFJQ9ju1xBGhGk7RW7s5Ri9nLB2xDYW78CAJaGDyvxYHIqj0r/n16nx+WwLzSQDUKvaILoTZhhuDmywvuIOwCg==",
+  "signature": "2Sk342oHC/KNVUpwIqmz6XT9m1b71+dNuYT1HbhGS0pU2ks0sy4LVL1UweG8+8tbXv91V4J3lDsCnVBT2nU3Bw==",
   "platformAssets": {
     "windows-x64": {
-      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.2.1/embegator-windows-x64.exe",
-      "sha256": "d15af6f0f6b8f386b64661434ff5ed3d043eea40795c790b3e5df99c391fd38e",
-      "binaryName": "embegator.exe",
-      "entryCommand": "rpc"
-    },
-    "windows-x86": {
-      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.2.1/embegator-windows-x86.exe",
-      "sha256": "d15af6f0f6b8f386b64661434ff5ed3d043eea40795c790b3e5df99c391fd38e",
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.2.2/embegator-windows-x64.exe",
+      "sha256": "4fbae4f794cf7de0b646404170965eef2bee7acdbf01848fef3c223faa7f1684",
       "binaryName": "embegator.exe",
       "entryCommand": "rpc"
     }
@@ -30,6 +24,6 @@
     "health_check": true
   },
   "minAppVersion": "1.1.0",
-  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/v1.2.1",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/v1.2.2",
   "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
 }
