@@ -148,23 +148,25 @@ fn rewrite_playlist(body: &str, base_url: &str, proxy_base: &str) -> String {
 
         let mut rewritten = line.to_string();
         if rewritten.contains("URI=\"") {
-            while let Some(start) = rewritten.find("URI=\"") {
+            let mut new_line = String::new();
+            let mut rest = rewritten.as_str();
+            while let Some(start) = rest.find("URI=\"") {
+                new_line.push_str(&rest[..start]);
                 let attr_start = start + 5;
-                if let Some(end) = rewritten[attr_start..].find('"') {
-                    let uri = rewritten[attr_start..attr_start + end].to_string();
+                if let Some(end) = rest[attr_start..].find('"') {
+                    let uri = rest[attr_start..attr_start + end].to_string();
                     let abs = resolve_url(base_url, &uri);
                     let token = encode_b64(&abs);
-                    let replacement = format!("URI=\"{}/b64/{}\"", proxy_base, token);
-                    rewritten = format!(
-                        "{}{}{}",
-                        &rewritten[..start],
-                        replacement,
-                        &rewritten[attr_start + end + 1..]
-                    );
+                    new_line.push_str(&format!("URI=\"{}/b64/{}\"", proxy_base, token));
+                    rest = &rest[attr_start + end + 1..];
                 } else {
+                    new_line.push_str(&rest[start..]);
+                    rest = "";
                     break;
                 }
             }
+            new_line.push_str(rest);
+            rewritten = new_line;
         }
 
         if !trimmed.starts_with('#') {

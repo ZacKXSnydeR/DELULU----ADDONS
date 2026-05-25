@@ -12,7 +12,7 @@ use std::error::Error;
 #[derive(Parser, Debug)]
 #[command(name = "EmbeGator")]
 #[command(author = "EmbeGator <https://github.com/ZacKXSnydeR>")]
-#[command(version = "1.1")]
+#[command(version = "1.2")]
 #[command(about = "External stream extractor addon runtime", long_about = None)]
 struct Cli {
     #[command(subcommand)]
