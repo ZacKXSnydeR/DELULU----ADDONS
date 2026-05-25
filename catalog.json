@@ -37,7 +37,7 @@
   },
   {
     "id": "scrapy",
-    "name": "Scrapy Cinema Engine",
+    "name": "Scrapy",
     "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/scrapy/manifest.json",
     "description": "Premium Cinema Engine utilizing highly optimized 4K HTTP bytecode streams."
   }

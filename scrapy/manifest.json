@@ -1,11 +1,11 @@
 {
   "id": "scrapy",
-  "name": "Scrapy Cinema Engine",
+  "name": "Scrapy",
   "version": "1.0.0",
   "protocolVersion": "1.0",
   "publisher": "zackxsnyder",
   "publicKeyId": "delulu-official-v1",
-  "signature": "OZnpbru/JmAA+6PURI/fjk3NzpNjsm9kS/5bG52S5oRLDkQvv+soS23aojBIoGw2QiiG5bMqF4yUwNDYzxFhDQ==",
+  "signature": "30PVYyvIbJamVa7/67fEOuYSnpODfeEww3qlSz8akaqSMJgSkz6IJX8ixmrXIh1P6mPob6jabNYC3zBodPZuDg==",
   "platformAssets": {
     "windows-x64": {
       "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.0/scrapy-windows-x64.exe",
