@@ -118,8 +118,9 @@ def main():
             tag = f"{addon}-v{new_version}"
             
         print(f"[*] Creating GitHub Release ({tag})...")
-        binary_name = list(manifest['platformAssets'].values())[0]['binaryName']
-        gh_cmd = f'gh release create {tag} "{built_exe}#{binary_name}" -R ZacKXSnydeR/DELULU----ADDONS -t "{addon.capitalize()} v{new_version}" --generate-notes'
+        download_url = list(manifest['platformAssets'].values())[0]['downloadUrl']
+        github_asset_name = download_url.split('/')[-1]
+        gh_cmd = f'gh release create {tag} "{built_exe}#{github_asset_name}" -R ZacKXSnydeR/DELULU----ADDONS -t "{addon.capitalize()} v{new_version}" --generate-notes'
         run_cmd(gh_cmd, cwd=addon_dir)
         
         print(f"[+] {addon} successfully deployed!")
