@@ -5,7 +5,7 @@
   "protocolVersion": "1.0",
   "publisher": "zackxsnyder",
   "publicKeyId": "delulu-official-v1",
-  "signature": "CQTyzqy4WomD3iNueyIKT8uBQBbdb4IcHpaEgxfITW4SOhlObsfHW8Cn8nA1v806wCbOMQWBlMUVMDtNmBT7Dw==",
+  "signature": "PFJQ9ju1xBGhGk7RW7s5Ri9nLB2xDYW78CAJaGDyvxYHIqj0r/n16nx+WwLzSQDUKvaILoTZhhuDmywvuIOwCg==",
   "platformAssets": {
     "windows-x64": {
       "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.2.1/embegator-windows-x64.exe",
@@ -22,6 +22,7 @@
   },
   "capabilities": {
     "http_stream": true,
+    "http_stream_cinema": false,
     "self_proxy": true,
     "multi_audio": false,
     "resolve_trailers": false,

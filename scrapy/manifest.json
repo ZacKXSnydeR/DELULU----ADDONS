@@ -1,0 +1,29 @@
+{
+  "id": "scrapy",
+  "name": "Scrapy Cinema Engine",
+  "version": "1.0.0",
+  "protocolVersion": "1.0",
+  "publisher": "zackxsnyder",
+  "publicKeyId": "delulu-official-v1",
+  "signature": "OZnpbru/JmAA+6PURI/fjk3NzpNjsm9kS/5bG52S5oRLDkQvv+soS23aojBIoGw2QiiG5bMqF4yUwNDYzxFhDQ==",
+  "platformAssets": {
+    "windows-x64": {
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.0/scrapy-windows-x64.exe",
+      "sha256": "374cb37643934032024766dfdd8f77886bcf72f4504abe722fd3b8cc2748b5c2",
+      "binaryName": "scrapy.exe",
+      "entryCommand": "rpc"
+    }
+  },
+  "capabilities": {
+    "http_stream": false,
+    "http_stream_cinema": true,
+    "self_proxy": false,
+    "multi_audio": true,
+    "resolve_trailers": false,
+    "mapping_id": false,
+    "health_check": true
+  },
+  "minAppVersion": "1.1.0",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/v1.0.0",
+  "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
+}

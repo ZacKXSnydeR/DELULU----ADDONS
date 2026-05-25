@@ -15,6 +15,7 @@
   },
   "capabilities": {
     "http_stream": true,
+    "http_stream_cinema": false,
     "self_proxy": true,
     "multi_audio": true,
     "resolve_trailers": false,
@@ -25,5 +26,5 @@
   "minAppVersion": "1.1.0",
   "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/vandal-v1.0.7",
   "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS",
-  "signature": "mj5yEdwCHUW6/F9UT7NE7ZPqUOZ9Bn844cHNfKy9rimMKk0s6MJ/AsFftutXe/03kACp4qhjuAFo+ZxDD9S5Ag=="
+  "signature": "8pHuLnEGahEH57JaggtGNSm7kQ8TCooN5I//Mhhi7o+OXlAHevj2v+vPYYFhRe6dgxGRNzf3ss10YiEC4w/FAg=="
 }

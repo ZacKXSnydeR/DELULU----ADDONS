@@ -34,5 +34,11 @@
     "name": "MetaResolver",
     "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/meta-resolver/manifest.json",
     "description": "Premium metadata utility — TMDB-to-IMDB ID mapping and direct-play trailer resolver"
+  },
+  {
+    "id": "scrapy",
+    "name": "Scrapy Cinema Engine",
+    "manifestUrl": "https://raw.githubusercontent.com/ZacKXSnydeR/DELULU----ADDONS/main/scrapy/manifest.json",
+    "description": "Premium Cinema Engine utilizing highly optimized 4K HTTP bytecode streams."
   }
 ]
