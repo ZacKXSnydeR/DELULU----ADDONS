@@ -1,14 +1,14 @@
 {
   "id": "motherbox",
   "name": "MotherBox",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "protocolVersion": "1.0",
   "publisher": "zackxsnyder",
   "publicKeyId": "delulu-official-v1",
-  "signature": "nxTnr5YgU1TL41JN1lYlXUwtcWpgy72N8MQzbij4q/ybTNQH/EzAJy/QOVeXmmdTW1hZ453biExhS/osYBv4AA==",
+  "signature": "1fCloe6TygCXHDNRrt3hi5as0cv92pDET1FWjzw2I4nN5nzAk5Vi64XjxDAylYxbwmRKFixmrzZrMwP0eRNvAw==",
   "platformAssets": {
     "windows-x64": {
-      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/motherbox-v3.1.0/motherbox-windows-x64.exe",
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/motherbox-v3.1.1/motherbox-windows-x64.exe",
       "sha256": "e8eaa661e80114902e5a76ca6d9819309d03a4cca45e0b41052f5d2a869dab94",
       "binaryName": "motherbox.exe",
       "entryCommand": ""
@@ -20,9 +20,10 @@
     "multi_audio": true,
     "resolve_trailers": false,
     "mapping_id": false,
-    "health_check": true
+    "health_check": true,
+    "http_stream_cinema": false
   },
   "minAppVersion": "1.1.0",
-  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/motherbox-v3.1.0",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/motherbox-v3.1.1",
   "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
 }

@@ -1,14 +1,14 @@
 {
   "id": "meta-resolver",
   "name": "MetaResolver",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "protocolVersion": "1.0",
   "publisher": "tenz",
   "publicKeyId": "delulu-official-v1",
-  "signature": "xtR7DGAwoL7mz42nJAjZpsKYTVFMjx7CqSkV1QAxk24K+pvPyH77ZSvX/xDwBtUO88rRk1mBKkw8hO+hiGRuCg==",
+  "signature": "IV8FOxH75/FhdsNT++giJYEbxdbJorZhSe/WTLc0lCC5Mv2wwY9TaHKu8xWoBnqB0yg6qjEyK4WWEiP1iak5Bw==",
   "platformAssets": {
     "windows-x64": {
-      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/meta-resolver-v1.2.0/meta-resolver-windows-x64.exe",
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/meta-resolver-v1.2.1/meta-resolver-windows-x64.exe",
       "sha256": "2f7b519bea8632adae29c5a2895f5890eb377f8e15b2880ab867119da54b5d43",
       "binaryName": "meta-resolver.exe",
       "entryCommand": "rpc"
@@ -20,9 +20,10 @@
     "multi_audio": false,
     "resolve_trailers": true,
     "mapping_id": true,
-    "health_check": true
+    "health_check": true,
+    "http_stream_cinema": false
   },
   "minAppVersion": "1.1.0",
-  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/meta-resolver-v1.2.0",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/meta-resolver-v1.2.1",
   "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
 }
