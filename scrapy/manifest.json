@@ -1,15 +1,15 @@
 {
   "id": "scrapy",
   "name": "Scrapy",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "protocolVersion": "1.0",
   "publisher": "zackxsnyder",
   "publicKeyId": "delulu-official-v1",
-  "signature": "30PVYyvIbJamVa7/67fEOuYSnpODfeEww3qlSz8akaqSMJgSkz6IJX8ixmrXIh1P6mPob6jabNYC3zBodPZuDg==",
+  "signature": "G1+mrz8X61ln6D5y+63EJ2T83RLGKw6RquxJ5lQUj/eEDdZigS8K3Y+zvjJVFEUOk1hIduipRfEVEPCriw3rBg==",
   "platformAssets": {
     "windows-x64": {
-      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.0.0/scrapy-windows-x64.exe",
-      "sha256": "374cb37643934032024766dfdd8f77886bcf72f4504abe722fd3b8cc2748b5c2",
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/scrapy-v1.1.0/scrapy-windows-x64.exe",
+      "sha256": "28436c0c76997e06912b9b40c63b17b98e2cb8f2006462cfd596fe87c4b41212",
       "binaryName": "scrapy.exe",
       "entryCommand": "rpc"
     }
@@ -24,6 +24,6 @@
     "health_check": true
   },
   "minAppVersion": "1.1.0",
-  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/v1.0.0",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/v1.1.0",
   "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
 }
