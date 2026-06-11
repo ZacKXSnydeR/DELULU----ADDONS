@@ -1,7 +1,8 @@
 [package]
-name = "manifest"
-version = "1.2.0"
+name = "meta-resolver"
+version = "1.3.0"
 edition = "2021"
+
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
@@ -9,6 +10,7 @@ reqwest = { version = "0.12", features = ["json", "cookies", "gzip", "brotli"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 futures-util = "0.3"
+regex = "1"
 urlencoding = "2.1"
 rand = "0.8"
 chrono = "0.4"
