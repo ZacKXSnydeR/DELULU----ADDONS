@@ -8,8 +8,16 @@ use models::{
 use reqwest::Client;
 use serde_json::{json, Value};
 use std::io::{self, BufRead};
+use regex::Regex;
 
 const UA: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
+const SUPABASE_URL: &str = "https://sjkhmshfcoadmcufukpb.supabase.co";
+const SUPABASE_ANON_KEY: &str = env!("SUPABASE_ANON_KEY");
+
+const GRAPHQL_ENDPOINT: &str = "https://graphql.imdb.com/";
+const QUERY_TITLE_VIDEOS: &str = "query TitleVideoGallerySubPage($const: ID!, $first: Int!, $filter: VideosQueryFilter, $sort: VideoSort) { title(id: $const) { videoStrip(first: $first, filter: $filter, sort: $sort) { edges { node { id name { value } } } } } }";
+const QUERY_VIDEO_PLAYBACK: &str = "query VideoPlayback($id: ID!) { video(id: $id) { playbackURLs { url videoMimeType videoDefinition } } }";
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
@@ -135,17 +143,25 @@ async fn resolve_batch(client: &Client, params: BatchResolveRequest) -> Vec<Reso
 
 async fn fetch_imdb_id(client: &Client, tid: &str, mtype: &str) -> Result<String, String> {
     let url = format!(
-        "https://db.videasy.net/3/{}/{}?append_to_response=external_ids",
-        mtype, tid
+        "{}/rest/v1/id_mappings?tmdb_id=eq.{}&media_type=eq.{}&select=imdb_id",
+        SUPABASE_URL, tid, mtype
     );
-    let resp = client.get(url).send().await.map_err(|e| e.to_string())?;
+    let resp = client
+        .get(&url)
+        .header("apikey", SUPABASE_ANON_KEY)
+        .header("Authorization", format!("Bearer {}", SUPABASE_ANON_KEY))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
     if resp.status() == 200 {
         let json: Value = resp.json().await.map_err(|e| e.to_string())?;
-        if let Some(id) = json["external_ids"]["imdb_id"].as_str() {
-            return Ok(id.to_string());
+        if let Some(row) = json.as_array().and_then(|a| a.first()) {
+            if let Some(id) = row["imdb_id"].as_str() {
+                return Ok(id.to_string());
+            }
         }
     }
-    Err("IMDb ID not found".to_string())
+    Err("IMDb ID not found in Supabase".to_string())
 }
 
 async fn fetch_streams_with_season(
@@ -153,82 +169,79 @@ async fn fetch_streams_with_season(
     iid: &str,
     season: Option<u32>,
 ) -> Result<String, String> {
-    // Keep legacy behavior for non-season requests to avoid regressions in existing flows.
-    if season.is_none() {
-        return fetch_oldest_trailer_stream(client, iid).await;
+    // Primary: IMDb GraphQL (cookie-free, no external dependencies)
+    if let Ok(url) = fetch_trailer_via_graphql(client, iid, season).await {
+        return Ok(url);
     }
-
-    // Season-specific requests: try season-aware list first.
-    if let Ok(video_id) = fetch_trailer_list_and_filter(client, iid, season).await {
-        if let Ok(url) = fetch_stream_by_video_id(client, &video_id).await {
-            return Ok(url);
-        }
-    }
-
-    // Fallback: getOldestTrailer (most reliable baseline)
-    fetch_oldest_trailer_stream(client, iid).await
+    // Fallback: IMDb HTML scraping
+    fetch_trailer_via_html(client, iid).await
 }
 
-async fn fetch_trailer_list_and_filter(
+async fn fetch_trailer_via_graphql(
     client: &Client,
     iid: &str,
     season: Option<u32>,
 ) -> Result<String, String> {
-    let url = format!(
-        "https://trailers.videasy.net/getTrailerList?id={}&sort=date,desc&first=50&cursor=",
-        iid
-    );
+    let payload = json!({
+        "operationName": "TitleVideoGallerySubPage",
+        "query": QUERY_TITLE_VIDEOS,
+        "variables": {
+            "const": iid,
+            "first": 20,
+            "filter": {
+                "maturityLevel": "INCLUDE_MATURE",
+                "nameConstraints": {},
+                "titleConstraints": {},
+                "types": ["TRAILER"]
+            },
+            "sort": { "by": "DATE", "order": "DESC" }
+        }
+    });
+
     let resp = client
-        .get(&url)
-        .header("Origin", "https://www.cineby.sc")
-        .header("Referer", "https://www.cineby.sc/")
+        .post(GRAPHQL_ENDPOINT)
+        .header("Content-Type", "application/json")
+        .header("Referer", "https://www.imdb.com/")
+        .header("Origin", "https://www.imdb.com")
+        .json(&payload)
         .send()
         .await
         .map_err(|e| e.to_string())?;
 
-    if resp.status() != 200 {
-        return Err("getTrailerList failed".to_string());
+    if !resp.status().is_success() {
+        return Err(format!("GraphQL title query failed: {}", resp.status()));
     }
 
     let json: Value = resp.json().await.map_err(|e| e.to_string())?;
+    let edges = json
+        .pointer("/data/title/videoStrip/edges")
+        .and_then(|e| e.as_array())
+        .ok_or("No trailers in IMDb response")?;
 
-    // API returns { id, imdb_url, trailers: [...], count, totalCount, ... }
-    let trailers = json["trailers"]
-        .as_array()
-        .ok_or("Invalid trailer list format")?;
-
-    if trailers.is_empty() {
-        return Err("No trailers found".to_string());
+    if edges.is_empty() {
+        return Err("No trailers found for this title".to_string());
     }
 
-    // If season specified, filter for season-matching trailers
-    if let Some(season_num) = season {
-        let filtered: Vec<_> = trailers
+    // If season specified, prefer a trailer whose name matches the season pattern;
+    // fall back to the newest (first, sorted date desc) if no match.
+    let video_id = if let Some(season_num) = season {
+        edges
             .iter()
-            .filter(|t| {
-                if let Some(name) = t["name"].as_str() {
-                    matches_season_pattern(name, season_num)
-                } else {
-                    false
-                }
+            .find(|edge| {
+                edge.pointer("/node/name/value")
+                    .and_then(|n| n.as_str())
+                    .map(|name| matches_season_pattern(name, season_num))
+                    .unwrap_or(false)
             })
-            .collect();
-
-        if !filtered.is_empty() {
-            // Return first match (list is already sorted by date desc, so newest first)
-            if let Some(id) = filtered[0]["id"].as_str() {
-                return Ok(id.to_string());
-            }
-        }
-        // No season match found, fall through to any trailer
-    }
-
-    // Return first trailer (newest, due to sort=date,desc)
-    if let Some(id) = trailers[0]["id"].as_str() {
-        Ok(id.to_string())
+            .or_else(|| edges.first())
     } else {
-        Err("No valid trailer ID found".to_string())
+        edges.first()
     }
+    .and_then(|e| e.pointer("/node/id"))
+    .and_then(|id| id.as_str())
+    .ok_or("No valid video ID in IMDb response")?;
+
+    fetch_playback_url(client, video_id).await
 }
 
 fn matches_season_pattern(name: &str, season: u32) -> bool {
@@ -272,60 +285,129 @@ fn matches_season_pattern(name: &str, season: u32) -> bool {
     false
 }
 
-async fn fetch_stream_by_video_id(client: &Client, vid: &str) -> Result<String, String> {
-    let url = format!("https://trailers.videasy.net/getStream?id={}", vid);
+async fn fetch_playback_url(client: &Client, video_id: &str) -> Result<String, String> {
+    let payload = json!({
+        "operationName": "VideoPlayback",
+        "query": QUERY_VIDEO_PLAYBACK,
+        "variables": { "id": video_id }
+    });
+
     let resp = client
-        .get(&url)
-        .header("Origin", "https://www.cineby.sc")
-        .header("Referer", "https://www.cineby.sc/")
+        .post(GRAPHQL_ENDPOINT)
+        .header("Content-Type", "application/json")
+        .header("Referer", "https://www.imdb.com/")
+        .header("Origin", "https://www.imdb.com")
+        .json(&payload)
         .send()
         .await
         .map_err(|e| e.to_string())?;
 
-    if resp.status() != 200 {
-        return Err("getStream failed".to_string());
+    if !resp.status().is_success() {
+        return Err(format!("GraphQL playback query failed: {}", resp.status()));
     }
 
     let json: Value = resp.json().await.map_err(|e| e.to_string())?;
-    if let Some(streams) = json["streams"].as_array() {
-        // Pick 1080p if available, else first
-        let best = streams
-            .iter()
-            .find(|s| s["quality"].as_str().unwrap_or("").contains("1080p"))
-            .or_else(|| streams.first());
+    let urls = json
+        .pointer("/data/video/playbackURLs")
+        .and_then(|u| u.as_array())
+        .ok_or("No playbackURLs in IMDb response")?;
 
-        if let Some(u) = best.and_then(|s| s["url"].as_str()) {
-            return Ok(u.to_string());
-        }
-    }
-    Err("No stream URL found".to_string())
-}
-
-async fn fetch_oldest_trailer_stream(client: &Client, iid: &str) -> Result<String, String> {
-    let url = format!("https://trailers.videasy.net/getOldestTrailer?id={}", iid);
-    let resp = client
-        .get(url)
-        .header("Origin", "https://www.cineby.sc")
-        .header("Referer", "https://www.cineby.sc/")
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
-
-    if resp.status() == 200 {
-        let json: Value = resp.json().await.map_err(|e| e.to_string())?;
-        if let Some(streams) = json["trailer"]["streams"].as_array() {
-            // Pick 1080p if available, else first
-            let best = streams
-                .iter()
-                .find(|s| s["quality"].as_str().unwrap_or("").contains("1080p"))
-                .or_else(|| streams.first());
-
-            if let Some(u) = best.and_then(|s| s["url"].as_str()) {
-                return Ok(u.to_string());
+    // Prefer 1080p/720p MP4, then any MP4, then first entry
+    let mut best: Option<String> = None;
+    for entry in urls {
+        let url = entry.get("url").and_then(|u| u.as_str()).unwrap_or("");
+        let def = entry.get("videoDefinition").and_then(|d| d.as_str()).unwrap_or("");
+        let is_mp4 = entry
+            .get("videoMimeType")
+            .and_then(|m| m.as_str())
+            .map(|s| s.to_lowercase().contains("mp4"))
+            .unwrap_or_else(|| url.contains(".mp4"));
+        if is_mp4 {
+            if def.contains("1080") || def.contains("720") {
+                return Ok(url.to_string());
+            }
+            if best.is_none() {
+                best = Some(url.to_string());
             }
         }
     }
-    Err("No direct stream found".to_string())
+    if let Some(u) = best {
+        return Ok(u);
+    }
+    urls.first()
+        .and_then(|e| e.get("url"))
+        .and_then(|u| u.as_str())
+        .map(|u| u.to_string())
+        .ok_or_else(|| "No playable stream URL found".to_string())
+}
+
+async fn fetch_trailer_via_html(client: &Client, iid: &str) -> Result<String, String> {
+    // Fetch IMDb title page to extract the embedded video ID (vi...)
+    let movie_url = format!("https://www.imdb.com/title/{}/", iid);
+    let resp = client
+        .get(&movie_url)
+        .header("Referer", "https://www.imdb.com/")
+        .header("Origin", "https://www.imdb.com")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    if !resp.status().is_success() {
+        return Err(format!("IMDb title page fetch failed: {}", resp.status()));
+    }
+    let body = resp.text().await.map_err(|e| e.to_string())?;
+
+    let re_embed = Regex::new(r#""embedUrl"\s*:\s*"([^"]+)""#).unwrap();
+    let re_vi = Regex::new(r"(vi\d+)").unwrap();
+    let re_vi_path = Regex::new(r#"/video/(vi\d+)"#).unwrap();
+    let video_id = if let Some(cap) = re_embed.captures(&body) {
+        re_vi.captures(&cap[1]).map(|c| c[1].to_string())
+    } else {
+        re_vi_path.captures(&body).map(|c| c[1].to_string())
+    }
+    .ok_or("Could not find trailer video ID in IMDb HTML")?;
+
+    // Fetch the video page to get signed playback URLs from __NEXT_DATA__
+    let video_url = format!("https://www.imdb.com/video/{}/", video_id);
+    let video_resp = client
+        .get(&video_url)
+        .header("Referer", "https://www.imdb.com/")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    if !video_resp.status().is_success() {
+        return Err(format!("IMDb video page fetch failed: {}", video_resp.status()));
+    }
+    let video_body = video_resp.text().await.map_err(|e| e.to_string())?;
+
+    let re_next = Regex::new(r#"<script[^>]*id="__NEXT_DATA__"[^>]*>(.*?)</script>"#).unwrap();
+    if let Some(cap) = re_next.captures(&video_body) {
+        if let Ok(val) = serde_json::from_str::<Value>(&cap[1]) {
+            if let Some(urls) = val
+                .pointer("/props/pageProps/videoPlaybackData/video/playbackURLs")
+                .and_then(|v| v.as_array())
+            {
+                for entry in urls {
+                    let url = entry.get("url").and_then(|u| u.as_str()).unwrap_or("");
+                    let def = entry.get("videoDefinition").and_then(|d| d.as_str()).unwrap_or("");
+                    if url.contains(".mp4") && (def.contains("1080") || def.contains("720")) {
+                        return Ok(url.to_string());
+                    }
+                }
+                if let Some(u) = urls.first().and_then(|e| e.get("url")).and_then(|u| u.as_str()) {
+                    return Ok(u.to_string());
+                }
+            }
+        }
+    }
+
+    // Last resort: regex scan for signed CDN MP4 URL
+    let re_mp4 = Regex::new(r#"https?://[a-zA-Z0-9.-]*media-imdb\.com/[^"\s]+\.mp4\?[^"\s]+"#).unwrap();
+    let unescaped = video_body.replace(r"\u002F", "/").replace(r"\/", "/");
+    if let Some(cap) = re_mp4.captures(&unescaped) {
+        return Ok(cap[0].to_string());
+    }
+
+    Err("HTML fallback: failed to extract MP4 URL".to_string())
 }
 
 fn send_response<T: serde::Serialize>(id: Option<Value>, result: T) {
