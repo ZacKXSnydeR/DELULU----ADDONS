@@ -1,5 +1,5 @@
 use crate::models::TmdbInfo;
-use reqwest::Client;
+use wreq::Client;
 use serde_json::Value;
 
 pub async fn fetch_tmdb_info(

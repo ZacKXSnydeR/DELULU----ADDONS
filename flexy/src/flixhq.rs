@@ -1,4 +1,4 @@
-use reqwest::Client;
+use wreq::Client;
 use scraper::{Html, Selector};
 use strsim::jaro_winkler;
 use serde_json::Value;
@@ -182,10 +182,16 @@ pub async fn get_servers(
         params.insert("players", token);
     }
 
+    let body = params.into_iter()
+        .map(|(k, v)| format!("{}={}", urlencoding::encode(k), urlencoding::encode(&v)))
+        .collect::<Vec<_>>()
+        .join("&");
+
     let res = client.post(ajax_url)
         .header("X-Requested-With", "XMLHttpRequest")
         .header("Referer", watch_url)
-        .form(&params)
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .body(body)
         .send()
         .await?;
 

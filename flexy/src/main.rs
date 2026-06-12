@@ -1,11 +1,11 @@
 use serde_json::json;
 use std::io::{self, BufRead, Write};
 
-mod models;
-mod http;
-mod tmdb;
 mod flixhq;
+mod http;
+mod models;
 mod rabbitstream;
+mod tmdb;
 
 use models::{JsonRpcRequest, JsonRpcResponse, ResolveStreamParams, StreamResult};
 
@@ -82,7 +82,10 @@ async fn main() {
     }
 }
 
-async fn handle_resolve_stream(client: &reqwest::Client, req: &JsonRpcRequest) -> JsonRpcResponse<StreamResult> {
+async fn handle_resolve_stream(
+    client: &wreq::Client,
+    req: &JsonRpcRequest,
+) -> JsonRpcResponse<StreamResult> {
     let params: ResolveStreamParams = match serde_json::from_value(req.params.clone()) {
         Ok(p) => p,
         Err(e) => {
@@ -108,7 +111,10 @@ async fn handle_resolve_stream(client: &reqwest::Client, req: &JsonRpcRequest) -
                         id: req.id.clone(),
                         jsonrpc: "2.0".to_string(),
                         protocol_version: "1.0".to_string(),
-                        result: Some(StreamResult::error("MISSING_API_KEY", "TMDB API key is required but was not provided")),
+                        result: Some(StreamResult::error(
+                            "MISSING_API_KEY",
+                            "TMDB API key is required but was not provided",
+                        )),
                         error: None,
                     };
                 }
@@ -123,7 +129,9 @@ async fn handle_resolve_stream(client: &reqwest::Client, req: &JsonRpcRequest) -
         params.season,
         params.episode,
         &tmdb_api_key,
-    ).await {
+    )
+    .await
+    {
         Ok(info) => info,
         Err(e) => {
             return JsonRpcResponse {
@@ -155,7 +163,10 @@ async fn handle_resolve_stream(client: &reqwest::Client, req: &JsonRpcRequest) -
             id: req.id.clone(),
             jsonrpc: "2.0".to_string(),
             protocol_version: "1.0".to_string(),
-            result: Some(StreamResult::error("NO_MATCH", "No results passed validation")),
+            result: Some(StreamResult::error(
+                "NO_MATCH",
+                "No results passed validation",
+            )),
             error: None,
         };
     }
@@ -172,7 +183,10 @@ async fn handle_resolve_stream(client: &reqwest::Client, req: &JsonRpcRequest) -
                     id: req.id.clone(),
                     jsonrpc: "2.0".to_string(),
                     protocol_version: "1.0".to_string(),
-                    result: Some(StreamResult::error("EPISODE_NOT_FOUND", "Could not locate episode link")),
+                    result: Some(StreamResult::error(
+                        "EPISODE_NOT_FOUND",
+                        "Could not locate episode link",
+                    )),
                     error: None,
                 };
             }
@@ -188,7 +202,8 @@ async fn handle_resolve_stream(client: &reqwest::Client, req: &JsonRpcRequest) -
         }
     }
 
-    let servers = match flixhq::get_servers(client, &watch_url, tmdb_info.media_type == "tv").await {
+    let servers = match flixhq::get_servers(client, &watch_url, tmdb_info.media_type == "tv").await
+    {
         Ok(s) => s,
         Err(e) => {
             return JsonRpcResponse {
@@ -227,14 +242,17 @@ async fn handle_resolve_stream(client: &reqwest::Client, req: &JsonRpcRequest) -
                 protocol_version: "1.0".to_string(),
                 result: Some(StreamResult::error("EXTRACTION_ERROR", &e.to_string())),
                 error: None,
-            }
+            },
         }
     } else {
         JsonRpcResponse {
             id: req.id.clone(),
             jsonrpc: "2.0".to_string(),
             protocol_version: "1.0".to_string(),
-            result: Some(StreamResult::error("NO_SERVERS", "Could not find target server")),
+            result: Some(StreamResult::error(
+                "NO_SERVERS",
+                "Could not find target server",
+            )),
             error: None,
         }
     }

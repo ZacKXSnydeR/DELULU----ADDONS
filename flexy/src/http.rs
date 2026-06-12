@@ -1,17 +1,11 @@
-use reqwest::{Client, header};
+use wreq::Client;
 use std::time::Duration;
 
 pub fn build_client() -> Client {
-    let mut headers = header::HeaderMap::new();
-    headers.insert(header::USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36".parse().unwrap());
-    headers.insert(header::ACCEPT, "application/json,text/html,*/*".parse().unwrap());
-    headers.insert(header::ACCEPT_LANGUAGE, "en-US,en;q=0.9".parse().unwrap());
-
     Client::builder()
-        .default_headers(headers)
-        .gzip(true)
+        .emulation(wreq_util::Emulation::Chrome120)
         .timeout(Duration::from_secs(20))
-        .redirect(reqwest::redirect::Policy::limited(10))
+        .redirect(wreq::redirect::Policy::limited(10))
         .cookie_store(true)
         .build()
         .expect("Failed to build HTTP client")
