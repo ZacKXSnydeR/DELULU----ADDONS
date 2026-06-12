@@ -19,3 +19,19 @@ bypass/node.exe
 release-artifacts/
 godfather_result.json
 
+# Local env — contains compile-time secrets, never commit
+.env
+**/.env
+
+# Built release binaries (uploaded to GitHub Releases, not tracked in repo)
+*-windows-x64.exe
+*-windows-x86.exe
+
+# Local test payloads and debug scripts
+test_payload.json
+test_req.json
+test_pw.py
+test.py
+solve2.py
+find_algo.py
+search_algo.py
