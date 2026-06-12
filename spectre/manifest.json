@@ -1,15 +1,15 @@
 {
   "id": "spectre",
   "name": "Spectre",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "protocolVersion": "1.0",
   "publisher": "tenz",
   "publicKeyId": "delulu-official-v1",
-  "signature": "ZTO5zVYofZDH6ZJy7m/2QiKW1gN5df+qsjsgw+udNUZgeI/8WRDS61QIpmzcrjfTHBD+qy5NNrscY7Hx1NMvCQ==",
+  "signature": "Kh2C+9e/X4a7a3zP4nqriAnjRat5IyhJIr0vgUHQ230nmg/t1sIxOpIVJHuYCIz6Brm9tdOhzQza3UTfVLdtAA==",
   "platformAssets": {
     "windows-x64": {
-      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/v1.1.1/spectre-windows-x64.exe",
-      "sha256": "16b0d0838c8970b9e4647c3be5acbb717f89bebf7b7810470f3a53ec66967d2b",
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/spectre-v1.2.0/spectre-windows-x64.exe",
+      "sha256": "d9a1ba2af7d9012d56d935614befc1e696eb3ce84d1c74b348c8fb5592dfe46e",
       "binaryName": "spectre.exe",
       "entryCommand": "rpc"
     }
@@ -24,6 +24,6 @@
     "http_stream_cinema": false
   },
   "minAppVersion": "1.1.0",
-  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/spectre-v1.2.0",
   "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
 }
