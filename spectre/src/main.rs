@@ -88,8 +88,8 @@ async fn main() -> anyhow::Result<()> {
                         success: true,
                         stream_url: primary_url,
                         headers: Some(HashMap::from([
-                            ("Referer".to_string(), "https://cloudnestra.com/".to_string()),
-                            ("Origin".to_string(), "https://cloudnestra.com".to_string()),
+                            ("Referer".to_string(), "https://cloudorchestranova.com/".to_string()),
+                            ("Origin".to_string(), "https://cloudorchestranova.com".to_string()),
                         ])),
                         subtitles: vec![],
                         audios,

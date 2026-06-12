@@ -1,7 +1,7 @@
 use warp::Filter;
 use base64::{engine::general_purpose, Engine as _};
 use anyhow::Result;
-use reqwest::header::{HeaderMap, HeaderValue, REFERER, ORIGIN, USER_AGENT, RANGE, CONNECTION, ACCEPT, ACCEPT_LANGUAGE, ACCEPT_ENCODING};
+use wreq::header::{HeaderMap, HeaderValue, REFERER, ORIGIN, USER_AGENT, RANGE, CONNECTION, ACCEPT, ACCEPT_LANGUAGE, ACCEPT_ENCODING};
 use regex::Regex;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -17,7 +17,7 @@ struct CachedSegment {
 }
 
 pub struct Proxy {
-    client: reqwest::Client,
+    client: wreq::Client,
     cache: Arc<RwLock<LruCache<String, CachedSegment>>>,
     // Registry of segments seen in m3u8 for prefetching
     segment_registry: Arc<RwLock<Vec<String>>>,
@@ -27,8 +27,9 @@ pub struct Proxy {
 impl Proxy {
     pub fn new() -> Self {
         Self {
-            client: reqwest::Client::builder()
-                .danger_accept_invalid_certs(true)
+            client: wreq::Client::builder()
+                .emulation(wreq_util::Emulation::Chrome120)
+                .cookie_store(true)
                 .pool_max_idle_per_host(10)
                 .build()
                 .unwrap(),
