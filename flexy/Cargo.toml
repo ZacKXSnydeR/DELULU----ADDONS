@@ -1,12 +1,15 @@
 [package]
 name = "flexy"
-version = "1.1.0"
+version = "1.2.0"
 edition = "2021"
 description = "FlixHQ/RabbitStream pure API resolver for Delulu"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
-reqwest = { version = "0.12", features = ["json", "cookies", "gzip", "brotli"] }
+wreq = { version = "6.0.0-rc", features = ["cookies", "json", "gzip", "brotli", "tokio-rt"] }
+wreq-util = "3.0.0-rc"
+time = "=0.3.36"
+cookie = "=0.18.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 regex = "1.10"

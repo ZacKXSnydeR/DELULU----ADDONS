@@ -1,15 +1,15 @@
 {
   "id": "flexy",
   "name": "Flexy",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "protocolVersion": "1.0",
   "publisher": "zackxsnyder",
   "publicKeyId": "delulu-official-v1",
-  "signature": "g1Fq97v2ZoV5oTMz21PSrTIkpkWpOK/aOiyjzJVfdzZddTbmPGq2iJwt3ZGtF7WsW982ohcLcDi1NrmaiO/+Dw==",
+  "signature": "EAw6Z9nUn/La83OUYcvhxsCO6pCdZImTb9Us7pCGrLbobYzbPT7GXtpL/x6WsqGcd13glvBDcpoEuP0K1KkyAw==",
   "platformAssets": {
     "windows-x64": {
-      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/flexy-v1.1.1/flexy-windows-x64.exe",
-      "sha256": "481d4640b936e072ca3a97fb090a69cbd14069d0f493f7752706e0dffa81f6c8",
+      "downloadUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/download/flexy-v1.2.0/flexy-windows-x64.exe",
+      "sha256": "5de1307e5fd2d27f99449906c79b13879cea6e7688fe7ff201f888d98e88506f",
       "binaryName": "flexy.exe",
       "entryCommand": "rpc"
     }
@@ -24,6 +24,6 @@
     "http_stream_cinema": false
   },
   "minAppVersion": "1.1.0",
-  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/flexy-v1.1.1",
+  "releaseNotesUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS/releases/tag/flexy-v1.2.0",
   "homepageUrl": "https://github.com/ZacKXSnydeR/DELULU----ADDONS"
 }
